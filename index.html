@@ -258,12 +258,13 @@
 
     /* スコア入力 */
     .score-input {
-      width: 40px; flex-shrink: 0;
-      background: rgba(255,255,255,.05); border: 1px solid var(--border);
+      width: 48px; min-height: 34px; flex-shrink: 0;
+      background: rgba(255,255,255,.07); border: 1px solid var(--border);
       border-radius: 6px; color: var(--text); font-family: inherit;
-      font-size: 0.82rem; font-weight: 700; padding: 3px 5px;
+      font-size: 0.9rem; font-weight: 700; padding: 4px 6px;
       text-align: center; -webkit-appearance: none; appearance: none;
-      transition: border-color .15s;
+      transition: border-color .15s; cursor: text;
+      touch-action: manipulation;
     }
     .score-input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold-glow); }
     .score-input::-webkit-inner-spin-button,
@@ -674,8 +675,8 @@ function storeScore(bracketId, ri, mi, slot, val) {
       return;
     }
   }
-  // スコアのみ更新（再描画で入力値が飛ばないようスコアはm.s1/s2に保持済み）
-  renderBracket(bracketId);
+  // スコアはm.s1/s2に保持済み。入力中に再描画するとフォーカスが外れるため再描画しない。
+  // 自動勝者選択(上のpick)時のみ再描画される。
 }
 
 // ── 敗者ブラケット構築 ────────────────────────────────────
@@ -937,9 +938,13 @@ function makeScoreEl(m, ri, mi, slotNum, val, bracketId, isWinner, isLoser) {
   inp.min       = 0; inp.max = 99;
   inp.value     = val !== '' ? val : '';
   inp.placeholder = '-';
-  inp.addEventListener('click',  e => e.stopPropagation());
-  inp.addEventListener('touchstart', e => e.stopPropagation());
-  inp.addEventListener('input',  e => {
+  // 伝播を止めて親スロットのclick(勝者選択)が誤発火しないようにする
+  const stopAll = e => e.stopPropagation();
+  inp.addEventListener('mousedown',  stopAll);
+  inp.addEventListener('click',      stopAll);
+  inp.addEventListener('touchstart', stopAll, { passive: true });
+  inp.addEventListener('touchend',   stopAll);
+  inp.addEventListener('input', e => {
     e.stopPropagation();
     storeScore(bracketId, ri, mi, slotNum, e.target.value);
   });
