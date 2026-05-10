@@ -131,7 +131,16 @@
       background: rgba(240,165,0,.06); border: 1px solid rgba(240,165,0,.2);
       border-radius: 12px; padding: 14px 16px;
     }
-    .bye-section .lbl { color: var(--gold); margin-bottom: 8px; }
+    .bye-section .lbl { color: var(--gold); margin-bottom: 10px; font-size: 0.78rem; font-weight: 700; letter-spacing: .06em; }
+    /* ランダム／指定 トグル */
+    .bye-mode-toggle { display: flex; gap: 6px; margin-bottom: 12px; }
+    .bye-mode-btn {
+      flex: 1; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border);
+      background: transparent; color: var(--muted); font-family: inherit;
+      font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all .15s;
+      touch-action: manipulation;
+    }
+    .bye-mode-btn.active { background: rgba(240,165,0,.18); border-color: rgba(240,165,0,.5); color: var(--gold); }
     .bye-select {
       background: var(--bg-input); border: 1px solid rgba(240,165,0,.25);
       border-radius: 10px; color: var(--text); font-family: inherit;
@@ -139,6 +148,7 @@
       -webkit-appearance: none; appearance: none; cursor: pointer;
     }
     .bye-select:focus { outline: none; border-color: var(--gold); }
+    .bye-random-note { font-size: 0.8rem; color: var(--muted); padding: 4px 2px; }
 
     /* ランダムペアボタン */
     .btn-randomize {
@@ -437,9 +447,15 @@
     <label class="lbl" id="lbl-names">参加者名</label>
     <div class="names-scroll" id="names-list"></div>
 
-    <!-- 奇数時: 不戦勝はランダム（UI不要） -->
-    <div class="bye-section" id="bye-section" style="display:none;">
-      <p class="lbl" style="font-size:0.82rem;color:var(--muted);">🎲 不戦勝選手はランダムに決定されます</p>
+    <!-- 奇数時: 不戦勝選手 -->
+    <div class="bye-section" id="bye-section">
+      <p class="lbl">🎫 不戦勝選手（1名が第1ラウンド免除）</p>
+      <div class="bye-mode-toggle">
+        <button class="bye-mode-btn active" id="bye-random-btn" onclick="setByeMode('random')">🎲 ランダム</button>
+        <button class="bye-mode-btn"        id="bye-pick-btn"   onclick="setByeMode('pick')">👤 選手を指定</button>
+      </div>
+      <p class="bye-random-note" id="bye-random-note">シャッフル後にランダムで1名が不戦勝になります</p>
+      <select class="bye-select" id="bye-select" style="display:none;"></select>
     </div>
 
     <!-- ダブルス: ランダムペア作成 -->
@@ -556,19 +572,51 @@ function updateInputs() {
     const ph = isDoubles ? `選手 ${i+1}` : `参加者 ${i+1}`;
     row.innerHTML = `<span class="name-idx">${i+1}</span>
       <input type="text" class="input inp-s" placeholder="${ph}" value="${h(prev[i]||'')}"
-        oninput="">`;
+        oninput="refreshByeSelect()">`;
     list.appendChild(row);
   }
 
   // 奇数判定: ダブルスは偶数強制なので不要
-  // bye-sectionは非表示固定（ランダム決定のためUI不要）
-  document.getElementById('bye-section').style.display = 'none';
+  // 奇数のときだけbye-sectionを表示
+  const odd = !isDoubles && (n % 2 !== 0);
+  document.getElementById('bye-section').style.display = odd ? 'block' : 'none';
+  if (odd && byeMode === 'pick') buildByeSelect(n);
 
   document.getElementById('pairs-preview').style.display = 'none';
   currentPairs = [];
 }
 
-// 不戦勝はランダム（buildByeSelect / refreshByeSelect 廃止）
+// ── 不戦勝モード（ランダム／指定） ────────────────────────
+let byeMode = 'random'; // 'random' | 'pick'
+
+function setByeMode(mode) {
+  byeMode = mode;
+  document.getElementById('bye-random-btn').classList.toggle('active', mode === 'random');
+  document.getElementById('bye-pick-btn').classList.toggle('active', mode === 'pick');
+  document.getElementById('bye-random-note').style.display = mode === 'random' ? '' : 'none';
+  document.getElementById('bye-select').style.display      = mode === 'pick'   ? '' : 'none';
+  if (mode === 'pick') buildByeSelect(+document.getElementById('num-p').value);
+}
+
+function buildByeSelect(n) {
+  const sel = document.getElementById('bye-select');
+  const prev = sel.value;
+  sel.innerHTML = '';
+  const inputs = [...document.querySelectorAll('#names-list .inp-s')];
+  for (let i = 0; i < n; i++) {
+    const name = inputs[i]?.value.trim() || `参加者 ${i+1}`;
+    const opt  = document.createElement('option');
+    opt.value = i;
+    opt.textContent = `${i+1}. ${name}`;
+    sel.appendChild(opt);
+  }
+  if (prev !== '') sel.value = prev;
+}
+
+function refreshByeSelect() {
+  const n = +document.getElementById('num-p').value;
+  if (!isDoubles && n % 2 !== 0 && byeMode === 'pick') buildByeSelect(n);
+}
 
 function randomizePairs() {
   const inputs  = [...document.querySelectorAll('#names-list .inp-s')];
@@ -605,7 +653,14 @@ function startTournament() {
   }
 
   shuffle(players);
-  // 奇数の場合: シャッフル後の先頭がランダムに不戦勝（先頭に置くだけでOK）
+
+  // 奇数 & 指定モード: 選択した選手を先頭に移動して不戦勝にする
+  if (!isDoubles && players.length % 2 !== 0 && byeMode === 'pick') {
+    const byeIdx = +document.getElementById('bye-select').value;
+    const idx = players.findIndex(p => p.id === byeIdx);
+    if (idx > 0) { const t = players[0]; players[0] = players[idx]; players[idx] = t; }
+  }
+  // ランダムモードはシャッフル後の先頭がそのまま不戦勝
 
   initBracket(players, 'winners');
   losers = null;
