@@ -299,9 +299,22 @@
     .losers-pending p { font-size: 0.84rem; text-align: center; line-height: 1.7; }
 
     /* ━━━━ WINNER ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-    #winner-wrap { display: none; padding: 32px 20px 48px; flex-shrink: 0; overflow-y: auto; }
+    /* オーバーレイ: ブラケットの上に重ねて表示 */
+    #winner-wrap {
+      display: none;
+      position: fixed; inset: 0; z-index: 100;
+      background: rgba(8,8,12,.78);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      overflow-y: auto;
+      padding: 32px 20px 48px;
+      animation: fadeInBg .35s ease both;
+    }
+    @keyframes fadeInBg {
+      from { opacity: 0; } to { opacity: 1; }
+    }
     .winner-box {
-      max-width: 420px; margin: 0 auto;
+      max-width: 420px; margin: 60px auto 0;
       background: var(--bg-card); border: 1px solid #2c220a;
       border-radius: 24px; padding: 48px 36px 40px;
       text-align: center; position: relative; overflow: hidden;
@@ -328,8 +341,17 @@
     .w-pair-a { display: block; }
     .w-pair-b { display: block; color: var(--gold-soft); font-size: .8em; margin-top: 4px; }
     .w-sub { color: var(--muted); font-size: 0.82rem; margin-top: 10px; }
-    .btn-restart { display: inline-block; margin-top: 28px; background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 11px 28px; border-radius: 10px; font-family: inherit; font-weight: 600; font-size: 0.84rem; cursor: pointer; transition: all .18s; }
-    .btn-restart:hover { border-color: var(--gold); color: var(--gold); }
+    /* ボタン横並び */
+    .winner-btns { display: flex; gap: 12px; justify-content: center; margin-top: 28px; flex-wrap: wrap; }
+    .btn-restart, .btn-see-bracket {
+      display: inline-block; background: transparent; border: 1px solid var(--border);
+      color: var(--muted); padding: 11px 22px; border-radius: 10px;
+      font-family: inherit; font-weight: 600; font-size: 0.84rem;
+      cursor: pointer; transition: all .18s;
+    }
+    .btn-restart:hover    { border-color: var(--gold); color: var(--gold); }
+    .btn-see-bracket      { border-color: #3a3a4a; color: #9898a8; }
+    .btn-see-bracket:hover { border-color: #6a6a8a; color: var(--text); }
 
     /* Bye auto-label */
     .bye-auto { position: absolute; width: 200px; display: flex; align-items: center; gap: 8px; padding: 4px 12px; pointer-events: none; }
@@ -433,7 +455,10 @@
       <p class="w-eyebrow" id="w-eyebrow">Champion</p>
       <p class="w-name" id="w-name"></p>
       <p class="w-sub">おめでとうございます！</p>
-      <button class="btn-restart" onclick="backToSetup()">もう一度プレイ</button>
+      <div class="winner-btns">
+        <button class="btn-see-bracket" onclick="closeWinner()">📋 トーナメント表を見る</button>
+        <button class="btn-restart" onclick="backToSetup()">もう一度プレイ</button>
+      </div>
     </div>
   </div>
 </div>
@@ -733,7 +758,14 @@ function checkWinner(bracketId) {
     wName.className = 'w-name';
     wName.textContent = last.winner.name;
   }
-  document.getElementById('winner-wrap').style.display = 'block';
+  const wrap = document.getElementById('winner-wrap');
+  wrap.style.display = 'flex';
+  wrap.style.alignItems = 'flex-start';
+  wrap.style.justifyContent = 'center';
+}
+
+function closeWinner() {
+  document.getElementById('winner-wrap').style.display = 'none';
 }
 
 // ── Tab ──────────────────────────────────────────────────
