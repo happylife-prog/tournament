@@ -437,10 +437,9 @@
     <label class="lbl" id="lbl-names">参加者名</label>
     <div class="names-scroll" id="names-list"></div>
 
-    <!-- 奇数時: 不戦勝選手セレクター -->
-    <div class="bye-section" id="bye-section">
-      <label class="lbl">🎫 不戦勝選手（1名が第1ラウンド免除）</label>
-      <select class="bye-select" id="bye-select"></select>
+    <!-- 奇数時: 不戦勝はランダム（UI不要） -->
+    <div class="bye-section" id="bye-section" style="display:none;">
+      <p class="lbl" style="font-size:0.82rem;color:var(--muted);">🎲 不戦勝選手はランダムに決定されます</p>
     </div>
 
     <!-- ダブルス: ランダムペア作成 -->
@@ -557,39 +556,19 @@ function updateInputs() {
     const ph = isDoubles ? `選手 ${i+1}` : `参加者 ${i+1}`;
     row.innerHTML = `<span class="name-idx">${i+1}</span>
       <input type="text" class="input inp-s" placeholder="${ph}" value="${h(prev[i]||'')}"
-        oninput="refreshByeSelect()">`;
+        oninput="">`;
     list.appendChild(row);
   }
 
   // 奇数判定: ダブルスは偶数強制なので不要
-  const odd = !isDoubles && (n % 2 !== 0);
-  document.getElementById('bye-section').style.display = odd ? 'block' : 'none';
-  if (odd) buildByeSelect(n);
+  // bye-sectionは非表示固定（ランダム決定のためUI不要）
+  document.getElementById('bye-section').style.display = 'none';
 
   document.getElementById('pairs-preview').style.display = 'none';
   currentPairs = [];
 }
 
-function buildByeSelect(n) {
-  const sel = document.getElementById('bye-select');
-  const prev = sel.value;
-  sel.innerHTML = '';
-  const inputs = [...document.querySelectorAll('#names-list .inp-s')];
-  for (let i = 0; i < n; i++) {
-    const name = inputs[i]?.value.trim() || `参加者 ${i+1}`;
-    const opt  = document.createElement('option');
-    opt.value = i;
-    opt.textContent = `${i+1}. ${name}`;
-    sel.appendChild(opt);
-  }
-  // 前の選択を復元
-  if (prev !== '') sel.value = prev;
-}
-
-function refreshByeSelect() {
-  const n = +document.getElementById('num-p').value;
-  if (!isDoubles && n % 2 !== 0) buildByeSelect(n);
-}
+// 不戦勝はランダム（buildByeSelect / refreshByeSelect 廃止）
 
 function randomizePairs() {
   const inputs  = [...document.querySelectorAll('#names-list .inp-s')];
@@ -625,18 +604,8 @@ function startTournament() {
     players = inputs.map((el, i) => ({ name: el.value.trim() || `参加者 ${i+1}`, id: i }));
   }
 
-  const byeIdx = (!isDoubles && players.length % 2 !== 0)
-    ? +document.getElementById('bye-select').value
-    : -1;
-
   shuffle(players);
-
-  // 不戦勝選手を先頭に移動
-  if (byeIdx >= 0) {
-    // シャッフル後は元のidで探す
-    const idx = players.findIndex(p => p.id === byeIdx);
-    if (idx > 0) { const t = players[0]; players[0] = players[idx]; players[idx] = t; }
-  }
+  // 奇数の場合: シャッフル後の先頭がランダムに不戦勝（先頭に置くだけでOK）
 
   initBracket(players, 'winners');
   losers = null;
