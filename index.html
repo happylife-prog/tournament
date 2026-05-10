@@ -18,7 +18,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    /* タッチデバイス: タップハイライト除去 */
     * { -webkit-tap-highlight-color: transparent; }
 
     :root {
@@ -34,6 +33,7 @@
       --muted:       #6b6b80;
       --subtle:      #2e2e3a;
       --accent:      #7c6cff;
+      --doubles:     #6caaff;
     }
 
     body {
@@ -87,7 +87,9 @@
       letter-spacing: .22em;
       text-transform: uppercase;
       color: var(--muted);
+      transition: color .3s;
     }
+    .hero-sub.is-doubles { color: var(--doubles); }
 
     .setup-panel {
       width: 100%;
@@ -97,6 +99,42 @@
       border-radius: 20px;
       padding: 36px 32px;
       box-shadow: 0 30px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.03) inset;
+    }
+
+    /* ── モード切替トグル ── */
+    .mode-toggle {
+      display: flex;
+      gap: 0;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 28px;
+    }
+    .mode-btn {
+      flex: 1;
+      border: none;
+      border-radius: 9px;
+      font-family: inherit;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: .04em;
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: all .2s;
+      background: transparent;
+      color: var(--muted);
+      touch-action: manipulation;
+    }
+    .mode-btn.active {
+      background: linear-gradient(135deg, var(--gold), #c47d00);
+      color: #000;
+      box-shadow: 0 2px 12px rgba(240,165,0,.3);
+    }
+    .mode-btn.active.doubles-active {
+      background: linear-gradient(135deg, var(--doubles), #3a7ad4);
+      color: #fff;
+      box-shadow: 0 2px 12px rgba(108,170,255,.3);
     }
 
     .lbl {
@@ -117,7 +155,7 @@
       border-radius: 10px;
       color: var(--text);
       font-family: inherit;
-      font-size: 16px; /* iOS 自動ズーム防止 (16px未満でズームする) */
+      font-size: 16px;
       padding: 11px 15px;
       transition: border-color .2s, box-shadow .2s;
       -webkit-appearance: none;
@@ -159,6 +197,10 @@
     }
     .btn-start:hover { opacity: .88; transform: translateY(-1px); box-shadow: 0 8px 32px rgba(240,165,0,.38); }
     .btn-start:active { transform: translateY(0); }
+    .btn-start.doubles-mode {
+      background: linear-gradient(135deg, var(--doubles), #3a7ad4);
+      box-shadow: 0 4px 24px rgba(108,170,255,.28);
+    }
 
     .names-scroll {
       max-height: 360px;
@@ -172,6 +214,7 @@
     .names-scroll::-webkit-scrollbar { width: 3px; }
     .names-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
+    /* シングルス行 */
     .name-row { display: flex; align-items: center; gap: 10px; }
     .name-row .input { flex: 1; margin: 0; }
     .name-idx {
@@ -179,25 +222,70 @@
       color: var(--subtle); width: 18px; text-align: right; flex-shrink: 0;
     }
 
+    /* ダブルス行 */
+    .doubles-inputs {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .doubles-inputs .input {
+      width: 100%;
+      padding: 9px 13px;
+      font-size: 15px;
+    }
+    .doubles-sep {
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: .1em;
+      color: var(--doubles);
+      opacity: .6;
+      text-align: center;
+      flex-shrink: 0;
+      width: 18px;
+    }
+    /* ダブルスチームの区切り線 */
+    .name-row.is-doubles {
+      background: rgba(108,170,255,.03);
+      border: 1px solid rgba(108,170,255,.08);
+      border-radius: 10px;
+      padding: 8px 10px;
+    }
+
     /* ━━━━ TOURNAMENT ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-    #tournament { display: none; flex-direction: column; min-height: 100vh; }
+    #tournament {
+      display: none;
+      flex-direction: column;
+      /* ✅ スクロール修正: 100dvh で高さを固定し overflow:hidden で外側スクロールを防ぐ */
+      height: 100dvh;
+      height: 100vh; /* dvh 非対応ブラウザ用フォールバック */
+      overflow: hidden;
+    }
 
     .nav {
       display: flex; align-items: center; gap: 14px;
       padding: 14px 28px;
-      background: rgba(8,8,12,.97); /* backdrop-filter 非対応ブラウザ用フォールバック */
+      background: rgba(8,8,12,.97);
       border-bottom: 1px solid var(--border-dim);
       position: sticky; top: 0; z-index: 30;
+      flex-shrink: 0; /* navが縮まないように */
     }
     @supports (backdrop-filter: blur(1px)) {
       .nav { background: rgba(8,8,12,.85); backdrop-filter: blur(16px); }
     }
     .nav-title { font-size: 0.9rem; font-weight: 700; color: var(--muted); flex: 1; }
     .nav-title b { color: var(--gold); font-weight: 800; }
+    .nav-title b.doubles { color: var(--doubles); }
 
     .bracket-wrap {
-      flex: 1; overflow: auto; padding: 44px 40px;
-      -webkit-overflow-scrolling: touch; /* iOS慣性スクロール */
+      flex: 1;
+      /* ✅ スクロール修正: min-height:0 が必須（flex子要素をコンテンツ以下に縮小可能にする） */
+      min-height: 0;
+      overflow: auto;
+      padding: 44px 40px;
+      /* ✅ タブレット横向き: 両軸のタッチスクロールを明示 */
+      touch-action: pan-x pan-y;
+      -webkit-overflow-scrolling: touch;
       overscroll-behavior: contain;
     }
     #bracket-container { position: relative; display: inline-block; }
@@ -212,6 +300,9 @@
       overflow: hidden;
       transition: border-color .25s, box-shadow .25s;
     }
+    /* ダブルス用: カードを広げる */
+    .match-card.doubles-card { width: 210px; }
+
     .match-card.active {
       border-color: rgba(240,165,0,.6);
       box-shadow: 0 0 0 1px rgba(240,165,0,.15), 0 0 18px rgba(240,165,0,.12);
@@ -232,11 +323,12 @@
       position: relative;
       transition: background .15s;
     }
+    /* ダブルスはペアを2行表示するため高さ確保 */
+    .p-slot.doubles-slot { min-height: 58px; align-items: flex-start; padding: 8px 12px; }
     .p-slot + .p-slot { border-top: 1px solid var(--border-dim); }
 
     .p-slot.clickable { cursor: pointer; touch-action: manipulation; }
     .p-slot.clickable .p-name { color: #d4d4e0; }
-    /* hover (PC) と active (タッチ) 両対応 */
     .p-slot.clickable:hover,
     .p-slot.clickable:active { background: rgba(240,165,0,.08); }
     .p-slot.clickable:hover .p-name,
@@ -247,6 +339,7 @@
       color: rgba(240,165,0,.4);
       flex-shrink: 0;
       transition: color .15s, transform .15s;
+      margin-top: 4px;
     }
     .p-slot.clickable:hover::after,
     .p-slot.clickable:active::after { color: var(--gold); transform: translateX(2px); }
@@ -257,13 +350,39 @@
     .p-slot.winner .p-name { color: var(--gold-soft); font-weight: 700; }
     .p-slot.winner .p-idx  { color: rgba(240,165,0,.4); }
 
-    .p-slot.loser .p-name { color: #28282f; }
-    .p-slot.loser .p-idx  { color: #1c1c22; }
-    .p-slot.empty .p-name { color: var(--subtle); }
+    .p-slot.loser .p-name  { color: #28282f; }
+    .p-slot.loser .p-idx   { color: #1c1c22; }
+    .p-slot.empty .p-name  { color: var(--subtle); }
 
     .p-idx  { font-size: 0.65rem; font-weight: 700; color: var(--subtle); width: 14px; text-align: right; flex-shrink: 0; }
     .p-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #9898a8; }
     .p-crown{ font-size: 0.72rem; flex-shrink: 0; opacity: .8; }
+
+    /* ダブルスのペア名2行 */
+    .p-pair {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      overflow: hidden;
+      min-width: 0;
+    }
+    .p-pair-a {
+      font-size: 0.83rem;
+      font-weight: 600;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      color: #9898a8;
+    }
+    .p-pair-b {
+      font-size: 0.76rem;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      color: #5a5a6e;
+    }
+    .p-slot.winner .p-pair-a { color: var(--gold-soft); }
+    .p-slot.winner .p-pair-b { color: rgba(240,165,0,.55); }
+    .p-slot.loser  .p-pair-a { color: #28282f; }
+    .p-slot.loser  .p-pair-b { color: #1c1c22; }
+    .p-slot.empty  .p-pair-a { color: var(--subtle); }
 
     .round-lbl {
       position: absolute;
@@ -278,10 +397,11 @@
     #winner-wrap {
       display: none;
       padding: 40px 20px 60px;
+      flex-shrink: 0;
     }
 
     .winner-box {
-      max-width: 400px;
+      max-width: 420px;
       margin: 0 auto;
       background: var(--bg-card);
       border: 1px solid #2c220a;
@@ -327,10 +447,16 @@
     }
 
     .w-name {
-      font-size: 2.4rem; font-weight: 900;
+      font-size: 2.2rem; font-weight: 900;
       letter-spacing: -.04em; color: var(--text);
-      line-height: 1.1;
+      line-height: 1.15;
     }
+    /* ダブルス優勝: ペア名を2行に分けて表示 */
+    .w-name.doubles-winner {
+      font-size: 1.8rem;
+    }
+    .w-pair-a { display: block; color: var(--text); }
+    .w-pair-b { display: block; color: var(--gold-soft); font-size: .85em; margin-top: 4px; }
 
     .w-sub { color: var(--muted); font-size: 0.82rem; margin-top: 10px; }
 
@@ -345,10 +471,8 @@
     .btn-restart:hover { border-color: var(--gold); color: var(--gold); }
 
     /* ━━━━ RESPONSIVE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-
-    /* ボタン全般のタッチ最適化 */
     .btn, .btn-restart, .btn-start {
-      touch-action: manipulation; /* 300ms遅延を除去 */
+      touch-action: manipulation;
       -webkit-user-select: none;
       user-select: none;
     }
@@ -363,6 +487,14 @@
       .nav { padding: 14px 20px; }
     }
 
+    /* タブレット横向き: 高さが足りないときも bracket-wrap がスクロールできるように */
+    @media (max-height: 600px) and (orientation: landscape) {
+      #setup { justify-content: flex-start; padding-top: 32px; }
+      .hero  { margin-bottom: 28px; }
+      .hero-title { font-size: 2.4rem; }
+      .bracket-wrap { padding: 24px 20px; }
+    }
+
     /* スマホ (〜600px) */
     @media (max-width: 600px) {
       .hero-title { font-size: 2.2rem; }
@@ -374,6 +506,9 @@
       .btn-start { font-size: 0.9rem; padding: 13px; }
     }
 
+    /* ダブルスモード: 名前入力が増えるので最大高さ拡張 */
+    .doubles-mode-scroll { max-height: 440px; }
+
     /* Bye auto-advance label */
     .bye-auto {
       position: absolute;
@@ -384,6 +519,7 @@
       padding: 5px 14px;
       pointer-events: none;
     }
+    .bye-auto.doubles-card { width: 210px; }
     .bye-auto-name {
       flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
       color: #38384a; font-size: 0.78rem;
@@ -404,27 +540,33 @@
   <div class="hero">
     <span class="hero-icon">🏆</span>
     <h1 class="hero-title">TOURNAMENT</h1>
-    <p class="hero-sub">Single Elimination</p>
+    <p class="hero-sub" id="hero-sub">Single Elimination</p>
   </div>
 
   <div class="setup-panel">
-    <label class="lbl">参加者数</label>
+    <!-- モード切替 -->
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="btn-singles" onclick="setMode(false)">🎾 シングルス</button>
+      <button class="mode-btn" id="btn-doubles" onclick="setMode(true)">👥 ダブルス</button>
+    </div>
+
+    <label class="lbl" id="lbl-count">参加者数</label>
     <div class="field-row">
       <input type="number" id="num-p" class="input input-num" min="2" max="32" value="8">
       <button class="btn btn-ghost" onclick="updateInputs()">更新</button>
     </div>
 
-    <label class="lbl">参加者名</label>
+    <label class="lbl" id="lbl-names">参加者名</label>
     <div class="names-scroll" id="names-list"></div>
 
-    <button class="btn btn-start" onclick="startTournament()">トーナメント開始 →</button>
+    <button class="btn btn-start" id="btn-start" onclick="startTournament()">トーナメント開始 →</button>
   </div>
 </div>
 
 <!-- ── TOURNAMENT ─────────────────────────────── -->
 <div id="tournament">
   <div class="nav">
-    <span class="nav-title">🏆 <b>TOURNAMENT</b></span>
+    <span class="nav-title">🏆 <b id="nav-mode-label">TOURNAMENT</b></span>
     <button class="btn btn-ghost" style="padding:8px 14px;font-size:.8rem;" onclick="backToSetup()">← やり直す</button>
   </div>
   <div class="bracket-wrap">
@@ -447,45 +589,105 @@
 // ── Constants ─────────────────────────────────────────────
 const BYE = { name: '—', isBye: true };
 
-// Layout（定数は render() 内で N0 に応じて動的計算）
-const MATCH_W  = 182;
-const ROUND_GAP= 56;
-const LABEL_H  = 26;
-
-function layoutParams(N0) {
-  const slotH  = Math.max(22, Math.min(40, Math.floor(360 / N0)));
-  const matchH = slotH * 2 + 2;
-  const gap    = Math.max(6, Math.min(14, Math.floor(80 / N0)));
-  return { slotH, matchH, gap, unit: matchH + gap };
-}
+const MATCH_W_SINGLES = 182;
+const MATCH_W_DOUBLES = 214;
+const ROUND_GAP = 56;
+const LABEL_H   = 26;
 
 // ── State ─────────────────────────────────────────────────
-let T = null; // { rounds }
+let T         = null;
+let isDoubles = false;
+
+// ── Mode ──────────────────────────────────────────────────
+function setMode(doubles) {
+  isDoubles = doubles;
+
+  // ボタン見た目
+  document.getElementById('btn-singles').classList.toggle('active', !doubles);
+  document.getElementById('btn-doubles').classList.toggle('active',  doubles);
+  document.getElementById('btn-doubles').classList.toggle('doubles-active', doubles);
+
+  // ラベル/ヒーロー更新
+  document.getElementById('hero-sub').textContent  = doubles ? 'Doubles Elimination' : 'Single Elimination';
+  document.getElementById('hero-sub').classList.toggle('is-doubles', doubles);
+  document.getElementById('lbl-count').textContent = doubles ? 'ペア数' : '参加者数';
+  document.getElementById('lbl-names').textContent = doubles ? 'ペア名（選手A / 選手B）' : '参加者名';
+  document.getElementById('btn-start').classList.toggle('doubles-mode', doubles);
+  document.getElementById('btn-start').textContent = doubles
+    ? 'ダブルストーナメント開始 →'
+    : 'トーナメント開始 →';
+
+  updateInputs();
+}
 
 // ── Setup ─────────────────────────────────────────────────
+function layoutParams(N0) {
+  const MATCH_W = isDoubles ? MATCH_W_DOUBLES : MATCH_W_SINGLES;
+  const slotH   = Math.max(isDoubles ? 28 : 22, Math.min(isDoubles ? 48 : 40, Math.floor(360 / N0)));
+  const matchH  = slotH * 2 + 2;
+  const gap     = Math.max(6, Math.min(14, Math.floor(80 / N0)));
+  return { slotH, matchH, gap, unit: matchH + gap, MATCH_W };
+}
+
 function updateInputs() {
   const n = Math.max(2, Math.min(32, +document.getElementById('num-p').value || 8));
   document.getElementById('num-p').value = n;
+
   const list = document.getElementById('names-list');
-  const prev = [...list.querySelectorAll('input')].map(i => i.value);
+  list.classList.toggle('doubles-mode-scroll', isDoubles);
+
+  // 既存の値を保持
+  const prevA = [...list.querySelectorAll('.inp-a')].map(i => i.value);
+  const prevB = [...list.querySelectorAll('.inp-b')].map(i => i.value);
+  const prevS = [...list.querySelectorAll('.inp-s')].map(i => i.value);
   list.innerHTML = '';
+
   for (let i = 0; i < n; i++) {
     const row = document.createElement('div');
-    row.className = 'name-row';
-    row.innerHTML = `<span class="name-idx">${i+1}</span>
-      <input type="text" class="input" placeholder="参加者 ${i+1}" value="${h(prev[i]||'')}">`;
+    if (isDoubles) {
+      row.className = 'name-row is-doubles';
+      row.innerHTML = `
+        <span class="name-idx" style="margin-top:6px">${i+1}</span>
+        <div class="doubles-inputs">
+          <input type="text" class="input inp-a" placeholder="選手A（${i+1}ペア）" value="${h(prevA[i]||'')}">
+          <input type="text" class="input inp-b" placeholder="選手B（${i+1}ペア）" value="${h(prevB[i]||'')}">
+        </div>`;
+    } else {
+      row.className = 'name-row';
+      row.innerHTML = `
+        <span class="name-idx">${i+1}</span>
+        <input type="text" class="input inp-s" placeholder="参加者 ${i+1}" value="${h(prevS[i]||'')}">`;
+    }
     list.appendChild(row);
   }
 }
 
 function startTournament() {
-  const inputs = [...document.querySelectorAll('#names-list input')];
-  let players = inputs.map((el, i) => ({ name: el.value.trim() || `参加者 ${i+1}`, id: i }));
+  let players;
+
+  if (isDoubles) {
+    const aInputs = [...document.querySelectorAll('#names-list .inp-a')];
+    const bInputs = [...document.querySelectorAll('#names-list .inp-b')];
+    players = aInputs.map((el, i) => {
+      const a = el.value.trim() || `選手A ${i+1}`;
+      const b = bInputs[i].value.trim() || `選手B ${i+1}`;
+      return { name: `${a} / ${b}`, pairA: a, pairB: b, id: i, isTeam: true };
+    });
+  } else {
+    const inputs = [...document.querySelectorAll('#names-list .inp-s')];
+    players = inputs.map((el, i) => ({ name: el.value.trim() || `参加者 ${i+1}`, id: i }));
+  }
+
   shuffle(players);
   initTournament(players);
-  document.getElementById('setup').style.display = 'none';
+
+  // ナビラベル
+  document.getElementById('nav-mode-label').textContent = isDoubles ? 'DOUBLES' : 'TOURNAMENT';
+  document.getElementById('nav-mode-label').classList.toggle('doubles', isDoubles);
+
+  document.getElementById('setup').style.display      = 'none';
   document.getElementById('winner-wrap').style.display = 'none';
-  document.getElementById('tournament').style.display = 'flex';
+  document.getElementById('tournament').style.display  = 'flex';
   render();
 }
 
@@ -500,7 +702,6 @@ function initTournament(players) {
   while (size < players.length) size <<= 1;
   const numByes = size - players.length;
 
-  // 各 BYE を実参加者とペアにする（BYEvsBYE が発生しないように）
   const slots = [];
   for (let i = 0; i < numByes; i++) slots.push(players[i], BYE);
   for (let i = numByes; i < players.length; i++) slots.push(players[i]);
@@ -525,12 +726,11 @@ function autoByes() {
     T.rounds.forEach((rd, ri) => {
       rd.forEach((m, mi) => {
         if (m.winner !== null) return;
-        // null = TBD (前ラウンド待ち), BYE = 不戦勝枠 — null は BYE として扱わない
         const b1 = m.p1 === BYE;
         const b2 = m.p2 === BYE;
         const r1 = m.p1 && !m.p1.isBye;
         const r2 = m.p2 && !m.p2.isBye;
-        if (b1 && b2)   { adv(ri, mi, BYE); changed = true; }
+        if (b1 && b2)      { adv(ri, mi, BYE);   changed = true; }
         else if (b1 && r2) { adv(ri, mi, m.p2); changed = true; }
         else if (r1 && b2) { adv(ri, mi, m.p1); changed = true; }
       });
@@ -558,7 +758,14 @@ function pick(ri, mi, player) {
 function checkWinner() {
   const last = T.rounds[T.rounds.length - 1][0];
   if (last.winner && !last.winner.isBye) {
-    document.getElementById('w-name').textContent = last.winner.name;
+    const wName  = document.getElementById('w-name');
+    if (last.winner.isTeam) {
+      wName.className = 'w-name doubles-winner';
+      wName.innerHTML = `<span class="w-pair-a">🤝 ${h(last.winner.pairA)}</span><span class="w-pair-b">${h(last.winner.pairB)}</span>`;
+    } else {
+      wName.className = 'w-name';
+      wName.textContent = last.winner.name;
+    }
     document.getElementById('winner-wrap').style.display = 'block';
   }
 }
@@ -572,7 +779,6 @@ function rdLabel(ri, total) {
   return `ROUND ${ri + 1}`;
 }
 
-// cy: 試合の垂直中心座標を返す
 function cy(ri, mi, unit, gap) {
   const g = 1 << ri;
   const t = mi * g * unit + LABEL_H;
@@ -586,7 +792,7 @@ function render() {
 
   const R  = T.rounds.length;
   const N0 = T.rounds[0].length;
-  const { matchH, gap, unit } = layoutParams(N0);
+  const { matchH, gap, unit, MATCH_W } = layoutParams(N0);
 
   const totalH = N0 * unit - gap + LABEL_H;
   const totalW = R * (MATCH_W + ROUND_GAP) - ROUND_GAP;
@@ -594,7 +800,7 @@ function render() {
   cont.style.height = totalH + 'px';
   cont.style.width  = totalW + 'px';
 
-  const cv = document.getElementById('lines-canvas');
+  const cv  = document.getElementById('lines-canvas');
   const dpr = window.devicePixelRatio || 1;
   cv.width  = totalW * dpr;
   cv.height = totalH * dpr;
@@ -620,15 +826,13 @@ function render() {
     rd.forEach((m, mi) => {
       const centerY = cy(ri, mi, unit, gap);
       const topY    = centerY - matchH / 2;
-
       const isByeMatch = ri === 0 && (m.p1 === BYE || m.p2 === BYE);
 
       if (isByeMatch) {
-        // 不戦勝：コンパクトなラベルのみ表示（カードなし）
         const winner = m.p1 === BYE ? m.p2 : m.p1;
         if (winner && !winner.isBye) {
           const el = document.createElement('div');
-          el.className = 'bye-auto';
+          el.className = 'bye-auto' + (isDoubles ? ' doubles-card' : '');
           el.style.cssText = `left:${x}px;top:${centerY - 14}px;`;
           el.innerHTML = `<span class="bye-auto-name">${h(winner.name)}</span><span class="bye-auto-tag">不戦勝</span>`;
           cont.appendChild(el);
@@ -636,7 +840,8 @@ function render() {
       } else {
         const bothReal = m.p1 && !m.p1.isBye && m.p2 && !m.p2.isBye;
         const card = document.createElement('div');
-        card.className = 'match-card ' + (m.winner ? 'done' : bothReal ? 'active' : '');
+        card.className = 'match-card' + (isDoubles ? ' doubles-card' : '') + ' ' +
+                         (m.winner ? 'done' : bothReal ? 'active' : '');
         card.style.cssText = `left:${x}px;top:${topY}px;`;
         card.appendChild(slot(m.p1, m, ri, mi, matchH));
         card.appendChild(slot(m.p2, m, ri, mi, matchH));
@@ -645,10 +850,10 @@ function render() {
 
       // コネクターライン
       if (ri < R - 1) {
-        const x1    = x + MATCH_W;
-        const midX  = x1 + ROUND_GAP / 2;
+        const x1   = x + MATCH_W;
+        const midX = x1 + ROUND_GAP / 2;
         const nextY = cy(ri + 1, mi >> 1, unit, gap);
-        const isAuto = m.p1 === BYE || m.p2 === BYE;
+        const isAuto    = m.p1 === BYE || m.p2 === BYE;
         const hasRealWin = !!m.winner && !m.winner.isBye;
         const lc = hasRealWin && !isAuto ? 'rgba(240,165,0,.35)' : 'rgba(30,30,46,.95)';
 
@@ -665,30 +870,56 @@ function render() {
 
 function slot(player, m, ri, mi, matchH) {
   const el = document.createElement('div');
-  el.className = 'p-slot';
   const slotH = Math.floor((matchH - 2) / 2);
-  el.style.minHeight = slotH + 'px';
-  el.style.fontSize  = slotH < 28 ? '0.75rem' : '0.87rem';
 
   const real     = player && !player.isBye;
   const bothReal = m.p1 && !m.p1.isBye && m.p2 && !m.p2.isBye;
 
-  if (!real) {
-    el.classList.add('empty');
-    el.innerHTML = '<span class="p-name">—</span>';
-  } else if (m.winner === player) {
-    el.classList.add('winner');
-    el.innerHTML = `<span class="p-name">${h(player.name)}</span><span class="p-crown">★</span>`;
-  } else if (m.winner) {
-    el.classList.add('loser');
-    el.innerHTML = `<span class="p-name">${h(player.name)}</span>`;
-  } else {
-    if (bothReal) {
+  if (isDoubles && real) {
+    // ダブルス: ペアを2行表示
+    el.className = 'p-slot doubles-slot';
+    el.style.minHeight = slotH + 'px';
+
+    const isWinner = m.winner === player;
+    const isLoser  = m.winner && m.winner !== player;
+
+    if (isWinner) el.classList.add('winner');
+    else if (isLoser) el.classList.add('loser');
+    else if (bothReal) {
       el.classList.add('clickable');
       el.title = `${player.name} を勝者に選択`;
       el.addEventListener('click', () => pick(ri, mi, player));
     }
-    el.innerHTML = `<span class="p-name">${h(player.name)}</span>`;
+
+    const crown = isWinner ? '<span class="p-crown">★</span>' : '';
+    el.innerHTML = `
+      <div class="p-pair">
+        <span class="p-pair-a">${h(player.pairA || player.name)}</span>
+        <span class="p-pair-b">${player.pairB ? h(player.pairB) : ''}</span>
+      </div>${crown}`;
+  } else {
+    // シングルス（従来通り）
+    el.className = 'p-slot';
+    el.style.minHeight = slotH + 'px';
+    el.style.fontSize  = slotH < 28 ? '0.75rem' : '0.87rem';
+
+    if (!real) {
+      el.classList.add('empty');
+      el.innerHTML = '<span class="p-name">—</span>';
+    } else if (m.winner === player) {
+      el.classList.add('winner');
+      el.innerHTML = `<span class="p-name">${h(player.name)}</span><span class="p-crown">★</span>`;
+    } else if (m.winner) {
+      el.classList.add('loser');
+      el.innerHTML = `<span class="p-name">${h(player.name)}</span>`;
+    } else {
+      if (bothReal) {
+        el.classList.add('clickable');
+        el.title = `${player.name} を勝者に選択`;
+        el.addEventListener('click', () => pick(ri, mi, player));
+      }
+      el.innerHTML = `<span class="p-name">${h(player.name)}</span>`;
+    }
   }
   return el;
 }
