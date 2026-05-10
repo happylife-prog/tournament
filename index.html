@@ -278,6 +278,8 @@
       touch-action: manipulation;
     }
     .score-input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold-glow); }
+    .score-input.score-required { border-color: rgba(240,165,0,.9) !important; box-shadow: 0 0 0 3px rgba(240,165,0,.3) !important; animation: scoreFlash .4s ease 2; }
+    @keyframes scoreFlash { 0%,100%{opacity:1} 50%{opacity:.4} }
     .score-input::-webkit-inner-spin-button,
     .score-input::-webkit-outer-spin-button { -webkit-appearance: none; }
     .score-input[type=number] { -moz-appearance: textfield; }
@@ -459,12 +461,12 @@
 
     <!-- 奇数時: 不戦勝選手 -->
     <div class="bye-section" id="bye-section">
-      <p class="lbl">🎫 不戦勝選手（1名が第1ラウンド免除）</p>
+      <p class="lbl">🎫 シード選手（1名が第1ラウンド免除）</p>
       <div class="bye-mode-toggle">
         <button class="bye-mode-btn active" id="bye-random-btn" onclick="setByeMode('random')">🎲 ランダム</button>
         <button class="bye-mode-btn"        id="bye-pick-btn"   onclick="setByeMode('pick')">👤 選手を指定</button>
       </div>
-      <p class="bye-random-note" id="bye-random-note">シャッフル後にランダムで1名が不戦勝になります</p>
+      <p class="bye-random-note" id="bye-random-note">シャッフル後にランダムで1名がシードになります</p>
       <select class="bye-select" id="bye-select" style="display:none;"></select>
     </div>
 
@@ -484,8 +486,8 @@
     <button class="btn btn-ghost" style="padding:7px 12px;font-size:.78rem;flex-shrink:0;" onclick="backToSetup()">← やり直す</button>
     <span class="nav-brand" id="nav-brand">🏆 <b>TOURNAMENT</b></span>
     <div class="tab-group">
-      <button class="tab-btn active-w" id="tab-w" onclick="showTab('w')">🏆 勝者</button>
-      <button class="tab-btn" id="tab-l" onclick="showTab('l')">💔 敗者 <span class="tab-badge" id="tab-badge">準備中</span></button>
+      <button class="tab-btn active-w" id="tab-w" onclick="showTab('w')">🏆 トーナメント</button>
+      <button class="tab-btn" id="tab-l" onclick="showTab('l')">💔 敗者トーナメント <span class="tab-badge" id="tab-badge">準備中</span></button>
       <button class="tab-btn" id="tab-h" onclick="showTab('h')">📋 履歴</button>
     </div>
   </div>
@@ -500,8 +502,9 @@
       <div id="bracket-l"><canvas id="canvas-l"></canvas></div>
       <div class="losers-pending" id="losers-pending">
         <span class="losers-pending-icon">⏳</span>
-        <p>勝者ブラケットの第1ラウンドが<br>終わると敗者ブラケットが作られます</p>
+        <p>トーナメントで敗者が決められ次第<br>トーナメントが作成されます</p>
       </div>
+    </div>
     <!-- 履歴 -->
     <div id="area-h">
       <div id="history-list"><p class="history-empty">まだ試合結果がありません</p></div>
@@ -1062,7 +1065,7 @@ function renderBracket(bracketId) {
           const el = document.createElement('div');
           el.className = 'bye-auto' + (isDoubles ? ' d' : '');
           el.style.cssText = `left:${x}px;top:${centerY-14}px;`;
-          el.innerHTML = `<span class="bye-auto-name">${h(winner.name)}</span><span class="bye-auto-tag">不戦勝</span>`;
+          el.innerHTML = `<span class="bye-auto-name">${h(winner.name)}</span><span class="bye-auto-tag">シード</span>`;
           cont.appendChild(el);
         }
       } else {
@@ -1136,10 +1139,25 @@ function makeSlot(player, m, ri, mi, matchH, bracketId, isLoss) {
   else if (both) {
     el.classList.add('clickable');
     el.title = `${player.name} を勝者に選択`;
-    el.addEventListener('click', () => pick(
-      bracketId === 'w' ? winners.rounds : losers.rounds,
-      ri, mi, player, bracketId
-    ));
+    el.addEventListener('click', () => {
+      const rds = bracketId === 'w' ? winners.rounds : losers.rounds;
+      const mm  = rds[ri][mi];
+      // 両方のスコアが入力されていない場合は勝者確定せず、入力を促す
+      if (mm.s1 === '' || mm.s2 === '') {
+        const card = el.closest('.match-card');
+        if (card) {
+          card.querySelectorAll('.score-input').forEach(inp => {
+            if (inp.value === '') {
+              inp.focus();
+              inp.classList.add('score-required');
+              setTimeout(() => inp.classList.remove('score-required'), 1200);
+            }
+          });
+        }
+        return;
+      }
+      pick(rds, ri, mi, player, bracketId);
+    });
   }
 
   const crown = isWinner ? '<span class="p-crown">★</span>' : '';
