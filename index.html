@@ -377,15 +377,16 @@
     /* 待機中スロット */
     .p-name.tbd { color: #3a3a52; font-style: italic; font-size: 0.78rem; }
 
-    /* 取り消しボタン */
+    /* 取り消しボタン：2スロットの境界線中央に配置してスコアと重ならないよう */
     .btn-undo {
-      position: absolute; top: 3px; right: 3px;
-      background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
-      border-radius: 5px; color: #44445a; font-size: 0.7rem; line-height: 1;
-      padding: 2px 5px; cursor: pointer; transition: all .15s;
+      position: absolute; top: 50%; right: 6px;
+      transform: translateY(-50%);
+      background: rgba(20,20,30,.85); border: 1px solid rgba(255,255,255,.12);
+      border-radius: 5px; color: #55556a; font-size: 0.68rem; line-height: 1;
+      padding: 2px 6px; cursor: pointer; transition: all .15s;
       font-family: inherit; z-index: 5;
     }
-    .btn-undo:hover { background: rgba(255,80,80,.15); border-color: rgba(255,80,80,.3); color: #ff8080; }
+    .btn-undo:hover { background: rgba(255,80,80,.18); border-color: rgba(255,80,80,.4); color: #ff8888; }
 
     /* 履歴エリア */
     #area-h { flex: 1; min-height: 0; overflow-y: auto; padding: 20px 24px; display: none; }
@@ -541,7 +542,8 @@ let matchHistory = []; // { time, bracketId, ri, mi, winner, loser, s1, s2 }
 // ── Layout ────────────────────────────────────────────────
 function lp(N0) {
   const mw   = isDoubles ? MATCH_WD : MATCH_W;
-  const slotH = Math.max(isDoubles ? 30 : 24, Math.min(isDoubles ? 50 : 42, Math.floor(400/N0)));
+  // 36px以上を保証（padding 8px×2 + フォント～20px = 実際の最小高さ）
+  const slotH = Math.max(isDoubles ? 34 : 36, Math.min(isDoubles ? 50 : 42, Math.floor(400/N0)));
   const matchH = slotH * 2 + 2;
   const gap    = Math.max(6, Math.min(16, Math.floor(90/N0)));
   return { slotH, matchH, gap, unit: matchH+gap, mw };
@@ -1068,7 +1070,7 @@ function renderBracket(bracketId) {
         const activeClass = m.winner ? 'done' : bothReal ? (isLoss ? 'active-l' : 'active-w') : '';
         const card = document.createElement('div');
         card.className = `match-card${isDoubles ? ' doubles-card' : ''} ${activeClass}`;
-        card.style.cssText = `left:${x}px;top:${topY}px;height:${matchH}px;overflow:hidden;`;
+        card.style.cssText = `left:${x}px;top:${topY}px;`;
         card.appendChild(makeSlot(m.p1, m, ri, mi, matchH, bracketId, isLoss));
         card.appendChild(makeSlot(m.p2, m, ri, mi, matchH, bracketId, isLoss));
         // 完了試合に取り消しボタン
