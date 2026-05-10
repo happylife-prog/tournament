@@ -1068,26 +1068,9 @@ function renderBracket(bracketId) {
         const activeClass = m.winner ? 'done' : bothReal ? (isLoss ? 'active-l' : 'active-w') : '';
         const card = document.createElement('div');
         card.className = `match-card${isDoubles ? ' doubles-card' : ''} ${activeClass}`;
-        card.style.cssText = `left:${x}px;top:${topY}px;`;
+        card.style.cssText = `left:${x}px;top:${topY}px;height:${matchH}px;overflow:hidden;`;
         card.appendChild(makeSlot(m.p1, m, ri, mi, matchH, bracketId, isLoss));
         card.appendChild(makeSlot(m.p2, m, ri, mi, matchH, bracketId, isLoss));
-        // 完了試合: カード下部にスコアバー表示
-        if (m.winner && !m.winner.isBye && !m.winner.isTBD) {
-          const bar  = document.createElement('div');
-          const hasS = m.s1 !== '' || m.s2 !== '';
-          bar.className = 'match-score-bar' + (hasS ? ' has-score' : '');
-          // 勝者がp1かp2かで表示順を決める
-          const wIsP1 = m.winner === m.p1;
-          const ws = wIsP1 ? m.s1 : m.s2;
-          const ls = wIsP1 ? m.s2 : m.s1;
-          const wsD = ws !== '' ? ws : '–';
-          const lsD = ls !== '' ? ls : '–';
-          bar.innerHTML = hasS
-            ? `<span class="msb-w">★ ${wsD}</span><span>–</span><span class="msb-l">${lsD}</span>`
-            : `<span>スコアなし</span>`;
-          card.appendChild(bar);
-        }
-
         // 完了試合に取り消しボタン
         if (m.winner && !m.winner.isBye && !m.winner.isTBD) {
           const undoBtn = document.createElement('button');
