@@ -1,6 +1,6 @@
 const CACHE = 'tournament-v1';
 const FILES = [
-  './tournament.html',
+  './index.html',
   './manifest.json',
   './icon.svg',
   './icon-maskable.svg',

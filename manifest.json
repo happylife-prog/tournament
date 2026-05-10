@@ -2,7 +2,7 @@
   "name": "トーナメント",
   "short_name": "Tournament",
   "description": "シングルエリミネーション トーナメントアプリ",
-  "start_url": "./tournament.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#08080c",
   "theme_color": "#f0a500",
