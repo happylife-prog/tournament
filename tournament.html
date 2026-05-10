@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>TOURNAMENT</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#f0a500">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Tournament">
+  <link rel="apple-touch-icon" href="icon.svg">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    /* タッチデバイス: タップハイライト除去 */
+    * { -webkit-tap-highlight-color: transparent; }
+
+    :root {
+      --bg:          #08080c;
+      --bg-card:     #0e0e14;
+      --bg-input:    #0a0a0f;
+      --border:      #222230;
+      --border-dim:  #16161f;
+      --gold:        #f0a500;
+      --gold-soft:   #fbbf24;
+      --gold-glow:   rgba(240,165,0,.18);
+      --text:        #f4f4f6;
+      --muted:       #6b6b80;
+      --subtle:      #2e2e3a;
+      --accent:      #7c6cff;
+    }
+
+    body {
+      font-family: 'Inter', 'Meiryo', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ━━━━ SETUP ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+    #setup {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 20px;
+    }
+
+    .hero { text-align: center; margin-bottom: 52px; }
+
+    .hero-icon {
+      display: inline-block;
+      font-size: 2.8rem;
+      margin-bottom: 18px;
+      filter: drop-shadow(0 0 28px rgba(240,165,0,.55));
+      animation: floatIcon 3s ease-in-out infinite;
+    }
+
+    @keyframes floatIcon {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(-6px); }
+    }
+
+    .hero-title {
+      font-size: 3.4rem;
+      font-weight: 900;
+      letter-spacing: -.05em;
+      line-height: 1;
+      background: linear-gradient(160deg, #fff 30%, #6b6b80);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-sub {
+      margin-top: 10px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .setup-panel {
+      width: 100%;
+      max-width: 480px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 36px 32px;
+      box-shadow: 0 30px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.03) inset;
+    }
+
+    .lbl {
+      display: block;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .field-row { display: flex; gap: 10px; align-items: center; margin-bottom: 26px; }
+
+    .input {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 16px; /* iOS 自動ズーム防止 (16px未満でズームする) */
+      padding: 11px 15px;
+      transition: border-color .2s, box-shadow .2s;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold-glow); }
+    .input-num  { width: 86px; }
+    .input-full { width: 100%; }
+
+    .btn {
+      border: none;
+      border-radius: 10px;
+      font-family: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .17s;
+      white-space: nowrap;
+    }
+
+    .btn-ghost {
+      background: var(--border-dim);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 11px 16px;
+      font-size: 0.84rem;
+    }
+    .btn-ghost:hover { background: var(--border); color: var(--text); }
+
+    .btn-start {
+      background: linear-gradient(135deg, var(--gold), #c47d00);
+      color: #000;
+      font-weight: 800;
+      font-size: 0.95rem;
+      letter-spacing: .01em;
+      width: 100%;
+      padding: 15px;
+      margin-top: 6px;
+      box-shadow: 0 4px 24px rgba(240,165,0,.28);
+    }
+    .btn-start:hover { opacity: .88; transform: translateY(-1px); box-shadow: 0 8px 32px rgba(240,165,0,.38); }
+    .btn-start:active { transform: translateY(0); }
+
+    .names-scroll {
+      max-height: 360px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      margin-bottom: 24px;
+      padding-right: 2px;
+    }
+    .names-scroll::-webkit-scrollbar { width: 3px; }
+    .names-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .name-row { display: flex; align-items: center; gap: 10px; }
+    .name-row .input { flex: 1; margin: 0; }
+    .name-idx {
+      font-size: 0.7rem; font-weight: 700;
+      color: var(--subtle); width: 18px; text-align: right; flex-shrink: 0;
+    }
+
+    /* ━━━━ TOURNAMENT ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+    #tournament { display: none; flex-direction: column; min-height: 100vh; }
+
+    .nav {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 28px;
+      background: rgba(8,8,12,.97); /* backdrop-filter 非対応ブラウザ用フォールバック */
+      border-bottom: 1px solid var(--border-dim);
+      position: sticky; top: 0; z-index: 30;
+    }
+    @supports (backdrop-filter: blur(1px)) {
+      .nav { background: rgba(8,8,12,.85); backdrop-filter: blur(16px); }
+    }
+    .nav-title { font-size: 0.9rem; font-weight: 700; color: var(--muted); flex: 1; }
+    .nav-title b { color: var(--gold); font-weight: 800; }
+
+    .bracket-wrap {
+      flex: 1; overflow: auto; padding: 44px 40px;
+      -webkit-overflow-scrolling: touch; /* iOS慣性スクロール */
+      overscroll-behavior: contain;
+    }
+    #bracket-container { position: relative; display: inline-block; }
+
+    /* Match cards */
+    .match-card {
+      position: absolute;
+      width: 182px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-dim);
+      border-radius: 11px;
+      overflow: hidden;
+      transition: border-color .25s, box-shadow .25s;
+    }
+    .match-card.active {
+      border-color: rgba(240,165,0,.6);
+      box-shadow: 0 0 0 1px rgba(240,165,0,.15), 0 0 18px rgba(240,165,0,.12);
+      animation: cardPulse 2s ease-in-out infinite;
+    }
+    .match-card.done { border-color: var(--border-dim); }
+
+    @keyframes cardPulse {
+      0%, 100% { box-shadow: 0 0 0 1px rgba(240,165,0,.15), 0 0 18px rgba(240,165,0,.1); }
+      50%       { box-shadow: 0 0 0 1px rgba(240,165,0,.3),  0 0 28px rgba(240,165,0,.2); }
+    }
+
+    .p-slot {
+      display: flex; align-items: center;
+      padding: 10px 14px; min-height: 43px;
+      font-size: 0.87rem; gap: 9px;
+      user-select: none; cursor: default;
+      position: relative;
+      transition: background .15s;
+    }
+    .p-slot + .p-slot { border-top: 1px solid var(--border-dim); }
+
+    .p-slot.clickable { cursor: pointer; touch-action: manipulation; }
+    .p-slot.clickable .p-name { color: #d4d4e0; }
+    /* hover (PC) と active (タッチ) 両対応 */
+    .p-slot.clickable:hover,
+    .p-slot.clickable:active { background: rgba(240,165,0,.08); }
+    .p-slot.clickable:hover .p-name,
+    .p-slot.clickable:active .p-name { color: var(--gold-soft); }
+    .p-slot.clickable::after {
+      content: '▶';
+      font-size: 0.55rem;
+      color: rgba(240,165,0,.4);
+      flex-shrink: 0;
+      transition: color .15s, transform .15s;
+    }
+    .p-slot.clickable:hover::after,
+    .p-slot.clickable:active::after { color: var(--gold); transform: translateX(2px); }
+
+    .p-slot.winner {
+      background: linear-gradient(90deg, rgba(240,165,0,.13), transparent);
+    }
+    .p-slot.winner .p-name { color: var(--gold-soft); font-weight: 700; }
+    .p-slot.winner .p-idx  { color: rgba(240,165,0,.4); }
+
+    .p-slot.loser .p-name { color: #28282f; }
+    .p-slot.loser .p-idx  { color: #1c1c22; }
+    .p-slot.empty .p-name { color: var(--subtle); }
+
+    .p-idx  { font-size: 0.65rem; font-weight: 700; color: var(--subtle); width: 14px; text-align: right; flex-shrink: 0; }
+    .p-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #9898a8; }
+    .p-crown{ font-size: 0.72rem; flex-shrink: 0; opacity: .8; }
+
+    .round-lbl {
+      position: absolute;
+      font-size: 0.62rem; font-weight: 700;
+      letter-spacing: .15em; text-transform: uppercase;
+      color: var(--subtle); text-align: center;
+      transition: color .3s;
+    }
+    .round-lbl.current { color: rgba(240,165,0,.6); }
+
+    /* ━━━━ WINNER ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+    #winner-wrap {
+      display: none;
+      padding: 40px 20px 60px;
+    }
+
+    .winner-box {
+      max-width: 400px;
+      margin: 0 auto;
+      background: var(--bg-card);
+      border: 1px solid #2c220a;
+      border-radius: 24px;
+      padding: 52px 40px 44px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      animation: riseIn .5s cubic-bezier(.22,1,.36,1) both;
+    }
+
+    .winner-box::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 50% -10%, rgba(240,165,0,.22) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .winner-box::after {
+      content: '';
+      position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+      width: 60%; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    }
+
+    @keyframes riseIn {
+      from { opacity: 0; transform: translateY(28px) scale(.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .w-trophy {
+      font-size: 3.8rem;
+      display: block;
+      margin-bottom: 20px;
+      filter: drop-shadow(0 0 30px rgba(240,165,0,.7));
+      animation: floatIcon 3s ease-in-out infinite;
+    }
+
+    .w-eyebrow {
+      font-size: 0.65rem; font-weight: 700;
+      letter-spacing: .22em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 10px;
+    }
+
+    .w-name {
+      font-size: 2.4rem; font-weight: 900;
+      letter-spacing: -.04em; color: var(--text);
+      line-height: 1.1;
+    }
+
+    .w-sub { color: var(--muted); font-size: 0.82rem; margin-top: 10px; }
+
+    .btn-restart {
+      display: inline-block; margin-top: 32px;
+      background: transparent; border: 1px solid var(--border);
+      color: var(--muted); padding: 11px 28px;
+      border-radius: 10px; font-family: inherit;
+      font-weight: 600; font-size: 0.84rem; cursor: pointer;
+      transition: all .18s;
+    }
+    .btn-restart:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* ━━━━ RESPONSIVE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+    /* ボタン全般のタッチ最適化 */
+    .btn, .btn-restart, .btn-start {
+      touch-action: manipulation; /* 300ms遅延を除去 */
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    .btn-start:active { opacity: .85; transform: none; }
+    .btn-ghost:active  { background: var(--border); color: var(--text); }
+    .btn-restart:active { border-color: var(--gold); color: var(--gold); }
+
+    /* タブレット (601px〜1024px) */
+    @media (min-width: 601px) and (max-width: 1024px) {
+      .setup-panel { max-width: 560px; }
+      .bracket-wrap { padding: 32px 24px; }
+      .nav { padding: 14px 20px; }
+    }
+
+    /* スマホ (〜600px) */
+    @media (max-width: 600px) {
+      .hero-title { font-size: 2.2rem; }
+      .setup-panel { padding: 24px 20px; }
+      .bracket-wrap { padding: 20px 12px; }
+      .nav { padding: 12px 16px; }
+      .w-name { font-size: 1.8rem; }
+      .winner-box { padding: 36px 24px 32px; }
+      .btn-start { font-size: 0.9rem; padding: 13px; }
+    }
+
+    /* Bye auto-advance label */
+    .bye-auto {
+      position: absolute;
+      width: 182px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 14px;
+      pointer-events: none;
+    }
+    .bye-auto-name {
+      flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      color: #38384a; font-size: 0.78rem;
+    }
+    .bye-auto-tag {
+      font-size: 0.5rem; color: #252530;
+      letter-spacing: .04em; flex-shrink: 0;
+    }
+
+    /* Bracket lines via canvas */
+    #lines-canvas { position: absolute; top: 0; left: 0; pointer-events: none; }
+  </style>
+</head>
+<body>
+
+<!-- ── SETUP ─────────────────────────────────── -->
+<div id="setup">
+  <div class="hero">
+    <span class="hero-icon">🏆</span>
+    <h1 class="hero-title">TOURNAMENT</h1>
+    <p class="hero-sub">Single Elimination</p>
+  </div>
+
+  <div class="setup-panel">
+    <label class="lbl">参加者数</label>
+    <div class="field-row">
+      <input type="number" id="num-p" class="input input-num" min="2" max="32" value="8">
+      <button class="btn btn-ghost" onclick="updateInputs()">更新</button>
+    </div>
+
+    <label class="lbl">参加者名</label>
+    <div class="names-scroll" id="names-list"></div>
+
+    <button class="btn btn-start" onclick="startTournament()">トーナメント開始 →</button>
+  </div>
+</div>
+
+<!-- ── TOURNAMENT ─────────────────────────────── -->
+<div id="tournament">
+  <div class="nav">
+    <span class="nav-title">🏆 <b>TOURNAMENT</b></span>
+    <button class="btn btn-ghost" style="padding:8px 14px;font-size:.8rem;" onclick="backToSetup()">← やり直す</button>
+  </div>
+  <div class="bracket-wrap">
+    <div id="bracket-container">
+      <canvas id="lines-canvas"></canvas>
+    </div>
+  </div>
+  <div id="winner-wrap">
+    <div class="winner-box">
+      <span class="w-trophy">🏆</span>
+      <p class="w-eyebrow">Champion</p>
+      <p class="w-name" id="w-name"></p>
+      <p class="w-sub">おめでとうございます！</p>
+      <button class="btn-restart" onclick="backToSetup()">もう一度プレイ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Constants ─────────────────────────────────────────────
+const BYE = { name: '—', isBye: true };
+
+// Layout（定数は render() 内で N0 に応じて動的計算）
+const MATCH_W  = 182;
+const ROUND_GAP= 56;
+const LABEL_H  = 26;
+
+function layoutParams(N0) {
+  const slotH  = Math.max(22, Math.min(40, Math.floor(360 / N0)));
+  const matchH = slotH * 2 + 2;
+  const gap    = Math.max(6, Math.min(14, Math.floor(80 / N0)));
+  return { slotH, matchH, gap, unit: matchH + gap };
+}
+
+// ── State ─────────────────────────────────────────────────
+let T = null; // { rounds }
+
+// ── Setup ─────────────────────────────────────────────────
+function updateInputs() {
+  const n = Math.max(2, Math.min(32, +document.getElementById('num-p').value || 8));
+  document.getElementById('num-p').value = n;
+  const list = document.getElementById('names-list');
+  const prev = [...list.querySelectorAll('input')].map(i => i.value);
+  list.innerHTML = '';
+  for (let i = 0; i < n; i++) {
+    const row = document.createElement('div');
+    row.className = 'name-row';
+    row.innerHTML = `<span class="name-idx">${i+1}</span>
+      <input type="text" class="input" placeholder="参加者 ${i+1}" value="${h(prev[i]||'')}">`;
+    list.appendChild(row);
+  }
+}
+
+function startTournament() {
+  const inputs = [...document.querySelectorAll('#names-list input')];
+  let players = inputs.map((el, i) => ({ name: el.value.trim() || `参加者 ${i+1}`, id: i }));
+  shuffle(players);
+  initTournament(players);
+  document.getElementById('setup').style.display = 'none';
+  document.getElementById('winner-wrap').style.display = 'none';
+  document.getElementById('tournament').style.display = 'flex';
+  render();
+}
+
+function backToSetup() {
+  document.getElementById('tournament').style.display = 'none';
+  document.getElementById('setup').style.display = 'flex';
+}
+
+// ── Tournament logic ──────────────────────────────────────
+function initTournament(players) {
+  let size = 1;
+  while (size < players.length) size <<= 1;
+  const numByes = size - players.length;
+
+  // 各 BYE を実参加者とペアにする（BYEvsBYE が発生しないように）
+  const slots = [];
+  for (let i = 0; i < numByes; i++) slots.push(players[i], BYE);
+  for (let i = numByes; i < players.length; i++) slots.push(players[i]);
+
+  const rounds = [];
+  let cur = slots;
+  while (cur.length >= 2) {
+    const rd = [];
+    for (let i = 0; i < cur.length; i += 2)
+      rd.push({ p1: cur[i], p2: cur[i+1], winner: null });
+    rounds.push(rd);
+    cur = new Array(cur.length >> 1).fill(null);
+  }
+  T = { rounds };
+  autoByes();
+}
+
+function autoByes() {
+  let changed = true;
+  while (changed) {
+    changed = false;
+    T.rounds.forEach((rd, ri) => {
+      rd.forEach((m, mi) => {
+        if (m.winner !== null) return;
+        // null = TBD (前ラウンド待ち), BYE = 不戦勝枠 — null は BYE として扱わない
+        const b1 = m.p1 === BYE;
+        const b2 = m.p2 === BYE;
+        const r1 = m.p1 && !m.p1.isBye;
+        const r2 = m.p2 && !m.p2.isBye;
+        if (b1 && b2)   { adv(ri, mi, BYE); changed = true; }
+        else if (b1 && r2) { adv(ri, mi, m.p2); changed = true; }
+        else if (r1 && b2) { adv(ri, mi, m.p1); changed = true; }
+      });
+    });
+  }
+}
+
+function adv(ri, mi, player) {
+  T.rounds[ri][mi].winner = player;
+  if (ri + 1 < T.rounds.length) {
+    const nm = T.rounds[ri+1][mi>>1];
+    if (mi % 2 === 0) nm.p1 = player; else nm.p2 = player;
+  }
+}
+
+function pick(ri, mi, player) {
+  const m = T.rounds[ri][mi];
+  if (m.winner || !player || player.isBye) return;
+  adv(ri, mi, player);
+  autoByes();
+  render();
+  checkWinner();
+}
+
+function checkWinner() {
+  const last = T.rounds[T.rounds.length - 1][0];
+  if (last.winner && !last.winner.isBye) {
+    document.getElementById('w-name').textContent = last.winner.name;
+    document.getElementById('winner-wrap').style.display = 'block';
+  }
+}
+
+// ── Rendering ─────────────────────────────────────────────
+function rdLabel(ri, total) {
+  const e = total - 1 - ri;
+  if (e === 0) return '決勝';
+  if (e === 1) return '準決勝';
+  if (e === 2) return '準々決勝';
+  return `ROUND ${ri + 1}`;
+}
+
+// cy: 試合の垂直中心座標を返す
+function cy(ri, mi, unit, gap) {
+  const g = 1 << ri;
+  const t = mi * g * unit + LABEL_H;
+  const b = t + g * unit - gap;
+  return (t + b) / 2;
+}
+
+function render() {
+  const cont = document.getElementById('bracket-container');
+  cont.querySelectorAll('.match-card,.round-lbl,.bye-auto').forEach(e => e.remove());
+
+  const R  = T.rounds.length;
+  const N0 = T.rounds[0].length;
+  const { matchH, gap, unit } = layoutParams(N0);
+
+  const totalH = N0 * unit - gap + LABEL_H;
+  const totalW = R * (MATCH_W + ROUND_GAP) - ROUND_GAP;
+
+  cont.style.height = totalH + 'px';
+  cont.style.width  = totalW + 'px';
+
+  const cv = document.getElementById('lines-canvas');
+  const dpr = window.devicePixelRatio || 1;
+  cv.width  = totalW * dpr;
+  cv.height = totalH * dpr;
+  cv.style.width  = totalW + 'px';
+  cv.style.height = totalH + 'px';
+  const ctx = cv.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, totalW, totalH);
+
+  const activeRound = T.rounds.findIndex(rd =>
+    rd.some(m => !m.winner && m.p1 && !m.p1.isBye && m.p2 && !m.p2.isBye)
+  );
+
+  T.rounds.forEach((rd, ri) => {
+    const x = ri * (MATCH_W + ROUND_GAP);
+
+    const lbl = document.createElement('div');
+    lbl.className = 'round-lbl' + (ri === activeRound ? ' current' : '');
+    lbl.style.cssText = `left:${x}px;top:0;width:${MATCH_W}px;`;
+    lbl.textContent = rdLabel(ri, R);
+    cont.appendChild(lbl);
+
+    rd.forEach((m, mi) => {
+      const centerY = cy(ri, mi, unit, gap);
+      const topY    = centerY - matchH / 2;
+
+      const isByeMatch = ri === 0 && (m.p1 === BYE || m.p2 === BYE);
+
+      if (isByeMatch) {
+        // 不戦勝：コンパクトなラベルのみ表示（カードなし）
+        const winner = m.p1 === BYE ? m.p2 : m.p1;
+        if (winner && !winner.isBye) {
+          const el = document.createElement('div');
+          el.className = 'bye-auto';
+          el.style.cssText = `left:${x}px;top:${centerY - 14}px;`;
+          el.innerHTML = `<span class="bye-auto-name">${h(winner.name)}</span><span class="bye-auto-tag">不戦勝</span>`;
+          cont.appendChild(el);
+        }
+      } else {
+        const bothReal = m.p1 && !m.p1.isBye && m.p2 && !m.p2.isBye;
+        const card = document.createElement('div');
+        card.className = 'match-card ' + (m.winner ? 'done' : bothReal ? 'active' : '');
+        card.style.cssText = `left:${x}px;top:${topY}px;`;
+        card.appendChild(slot(m.p1, m, ri, mi, matchH));
+        card.appendChild(slot(m.p2, m, ri, mi, matchH));
+        cont.appendChild(card);
+      }
+
+      // コネクターライン
+      if (ri < R - 1) {
+        const x1    = x + MATCH_W;
+        const midX  = x1 + ROUND_GAP / 2;
+        const nextY = cy(ri + 1, mi >> 1, unit, gap);
+        const isAuto = m.p1 === BYE || m.p2 === BYE;
+        const hasRealWin = !!m.winner && !m.winner.isBye;
+        const lc = hasRealWin && !isAuto ? 'rgba(240,165,0,.35)' : 'rgba(30,30,46,.95)';
+
+        line(ctx, x1, centerY, midX, centerY, lc);
+        if (mi % 2 === 0) {
+          const sibY = mi + 1 < rd.length ? cy(ri, mi + 1, unit, gap) : centerY;
+          line(ctx, midX, centerY, midX, sibY, lc);
+          line(ctx, midX, nextY, x + MATCH_W + ROUND_GAP, nextY, lc);
+        }
+      }
+    });
+  });
+}
+
+function slot(player, m, ri, mi, matchH) {
+  const el = document.createElement('div');
+  el.className = 'p-slot';
+  const slotH = Math.floor((matchH - 2) / 2);
+  el.style.minHeight = slotH + 'px';
+  el.style.fontSize  = slotH < 28 ? '0.75rem' : '0.87rem';
+
+  const real     = player && !player.isBye;
+  const bothReal = m.p1 && !m.p1.isBye && m.p2 && !m.p2.isBye;
+
+  if (!real) {
+    el.classList.add('empty');
+    el.innerHTML = '<span class="p-name">—</span>';
+  } else if (m.winner === player) {
+    el.classList.add('winner');
+    el.innerHTML = `<span class="p-name">${h(player.name)}</span><span class="p-crown">★</span>`;
+  } else if (m.winner) {
+    el.classList.add('loser');
+    el.innerHTML = `<span class="p-name">${h(player.name)}</span>`;
+  } else {
+    if (bothReal) {
+      el.classList.add('clickable');
+      el.title = `${player.name} を勝者に選択`;
+      el.addEventListener('click', () => pick(ri, mi, player));
+    }
+    el.innerHTML = `<span class="p-name">${h(player.name)}</span>`;
+  }
+  return el;
+}
+
+function line(ctx, x1, y1, x2, y2, color) {
+  ctx.beginPath();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.lineCap = 'round';
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.stroke();
+}
+
+// ── Util ──────────────────────────────────────────────────
+function shuffle(a) {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+}
+
+function h(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Init
+updateInputs();
+
+// Service Worker 登録（PWA）
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>

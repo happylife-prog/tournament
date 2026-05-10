@@ -1,0 +1,24 @@
+{
+  "name": "トーナメント",
+  "short_name": "Tournament",
+  "description": "シングルエリミネーション トーナメントアプリ",
+  "start_url": "./tournament.html",
+  "display": "standalone",
+  "background_color": "#08080c",
+  "theme_color": "#f0a500",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
