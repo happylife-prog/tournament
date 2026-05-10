@@ -509,6 +509,82 @@
     /* ダブルスモード: 名前入力が増えるので最大高さ拡張 */
     .doubles-mode-scroll { max-height: 440px; }
 
+    /* ── ランダムペアボタン ── */
+    .btn-randomize {
+      width: 100%;
+      padding: 13px;
+      margin-bottom: 14px;
+      background: rgba(108,170,255,.1);
+      border: 1px dashed rgba(108,170,255,.35);
+      color: var(--doubles);
+      font-family: inherit;
+      font-size: 0.88rem;
+      font-weight: 700;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all .18s;
+      touch-action: manipulation;
+      letter-spacing: .02em;
+    }
+    .btn-randomize:hover  { background: rgba(108,170,255,.18); border-style: solid; }
+    .btn-randomize:active { background: rgba(108,170,255,.24); }
+
+    /* ── ペアプレビュー ── */
+    .pairs-preview {
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 16px;
+      background: rgba(108,170,255,.05);
+      border: 1px solid rgba(108,170,255,.12);
+      border-radius: 12px;
+      padding: 14px 14px 10px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .pairs-preview::-webkit-scrollbar { width: 3px; }
+    .pairs-preview::-webkit-scrollbar-thumb { background: rgba(108,170,255,.3); border-radius: 2px; }
+
+    .pairs-preview-header {
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--doubles);
+      opacity: .7;
+      margin-bottom: 8px;
+    }
+    .pair-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      background: rgba(108,170,255,.06);
+      border-radius: 8px;
+      border: 1px solid rgba(108,170,255,.1);
+    }
+    .pair-num {
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: rgba(108,170,255,.5);
+      width: 16px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .pair-names {
+      flex: 1;
+      font-size: 0.84rem;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      color: var(--text);
+    }
+    .pair-slash {
+      color: rgba(108,170,255,.5);
+      margin: 0 5px;
+      font-weight: 300;
+    }
+
     /* Bye auto-advance label */
     .bye-auto {
       position: absolute;
@@ -559,6 +635,16 @@
     <label class="lbl" id="lbl-names">参加者名</label>
     <div class="names-scroll" id="names-list"></div>
 
+    <!-- ダブルス: ランダムペア作成ボタン -->
+    <button class="btn-randomize" id="btn-randomize" style="display:none" onclick="randomizePairs()">
+      🎲 ランダムでペアを作る
+    </button>
+
+    <!-- ダブルス: ペアプレビュー -->
+    <div class="pairs-preview" id="pairs-preview">
+      <div class="pairs-preview-header">ペア確認 — もう一度押すと再シャッフル</div>
+    </div>
+
     <button class="btn btn-start" id="btn-start" onclick="startTournament()">トーナメント開始 →</button>
   </div>
 </div>
@@ -595,8 +681,9 @@ const ROUND_GAP = 56;
 const LABEL_H   = 26;
 
 // ── State ─────────────────────────────────────────────────
-let T         = null;
-let isDoubles = false;
+let T            = null;
+let isDoubles    = false;
+let currentPairs = []; // [[nameA, nameB], ...]
 
 // ── Mode ──────────────────────────────────────────────────
 function setMode(doubles) {
@@ -610,12 +697,17 @@ function setMode(doubles) {
   // ラベル/ヒーロー更新
   document.getElementById('hero-sub').textContent  = doubles ? 'Doubles Elimination' : 'Single Elimination';
   document.getElementById('hero-sub').classList.toggle('is-doubles', doubles);
-  document.getElementById('lbl-count').textContent = doubles ? 'ペア数' : '参加者数';
-  document.getElementById('lbl-names').textContent = doubles ? 'ペア名（選手A / 選手B）' : '参加者名';
+  document.getElementById('lbl-count').textContent = doubles ? '参加人数（偶数）' : '参加者数';
+  document.getElementById('lbl-names').textContent = doubles ? '参加者名（個人）' : '参加者名';
   document.getElementById('btn-start').classList.toggle('doubles-mode', doubles);
   document.getElementById('btn-start').textContent = doubles
     ? 'ダブルストーナメント開始 →'
     : 'トーナメント開始 →';
+
+  // ランダムペアボタン & プレビューの表示切替
+  document.getElementById('btn-randomize').style.display = doubles ? 'block' : 'none';
+  document.getElementById('pairs-preview').style.display = 'none';
+  currentPairs = [];
 
   updateInputs();
 }
@@ -630,49 +722,68 @@ function layoutParams(N0) {
 }
 
 function updateInputs() {
-  const n = Math.max(2, Math.min(32, +document.getElementById('num-p').value || 8));
+  let n = Math.max(2, Math.min(32, +document.getElementById('num-p').value || 8));
+  // ダブルスは偶数に丸める
+  if (isDoubles && n % 2 !== 0) n++;
   document.getElementById('num-p').value = n;
 
   const list = document.getElementById('names-list');
-  list.classList.toggle('doubles-mode-scroll', isDoubles);
-
   // 既存の値を保持
-  const prevA = [...list.querySelectorAll('.inp-a')].map(i => i.value);
-  const prevB = [...list.querySelectorAll('.inp-b')].map(i => i.value);
   const prevS = [...list.querySelectorAll('.inp-s')].map(i => i.value);
   list.innerHTML = '';
 
+  // ダブルス・シングルスともに個人名入力（ダブルスはペア化をランダムで行う）
   for (let i = 0; i < n; i++) {
     const row = document.createElement('div');
-    if (isDoubles) {
-      row.className = 'name-row is-doubles';
-      row.innerHTML = `
-        <span class="name-idx" style="margin-top:6px">${i+1}</span>
-        <div class="doubles-inputs">
-          <input type="text" class="input inp-a" placeholder="選手A（${i+1}ペア）" value="${h(prevA[i]||'')}">
-          <input type="text" class="input inp-b" placeholder="選手B（${i+1}ペア）" value="${h(prevB[i]||'')}">
-        </div>`;
-    } else {
-      row.className = 'name-row';
-      row.innerHTML = `
-        <span class="name-idx">${i+1}</span>
-        <input type="text" class="input inp-s" placeholder="参加者 ${i+1}" value="${h(prevS[i]||'')}">`;
-    }
+    row.className = 'name-row';
+    const ph = isDoubles ? `選手 ${i+1}` : `参加者 ${i+1}`;
+    row.innerHTML = `
+      <span class="name-idx">${i+1}</span>
+      <input type="text" class="input inp-s" placeholder="${ph}" value="${h(prevS[i]||'')}">`;
     list.appendChild(row);
   }
+
+  // 人数変更時はプレビューをリセット
+  document.getElementById('pairs-preview').style.display = 'none';
+  currentPairs = [];
+}
+
+// ── ランダムペア作成 ────────────────────────────────────────
+function randomizePairs() {
+  const inputs = [...document.querySelectorAll('#names-list .inp-s')];
+  const names  = inputs.map((el, i) => el.value.trim() || `選手 ${i+1}`);
+
+  // シャッフルしてペアに分割
+  const shuffled = [...names];
+  shuffle(shuffled);
+  currentPairs = [];
+  for (let i = 0; i < shuffled.length; i += 2) {
+    currentPairs.push([shuffled[i], shuffled[i+1] || `選手 ${i+2}`]);
+  }
+
+  // プレビュー表示
+  const preview = document.getElementById('pairs-preview');
+  // ヘッダー以外を削除してから再描画
+  preview.innerHTML = '<div class="pairs-preview-header">ペア確認 — もう一度押すと再シャッフル 🔀</div>';
+  currentPairs.forEach(([a, b], i) => {
+    const row = document.createElement('div');
+    row.className = 'pair-row';
+    row.innerHTML = `<span class="pair-num">${i+1}</span>
+      <span class="pair-names">${h(a)}<span class="pair-slash">/</span>${h(b)}</span>`;
+    preview.appendChild(row);
+  });
+  preview.style.display = 'flex';
 }
 
 function startTournament() {
   let players;
 
   if (isDoubles) {
-    const aInputs = [...document.querySelectorAll('#names-list .inp-a')];
-    const bInputs = [...document.querySelectorAll('#names-list .inp-b')];
-    players = aInputs.map((el, i) => {
-      const a = el.value.trim() || `選手A ${i+1}`;
-      const b = bInputs[i].value.trim() || `選手B ${i+1}`;
-      return { name: `${a} / ${b}`, pairA: a, pairB: b, id: i, isTeam: true };
-    });
+    // ペアが未作成なら自動でランダム化
+    if (currentPairs.length === 0) randomizePairs();
+    players = currentPairs.map(([a, b], i) => ({
+      name: `${a} / ${b}`, pairA: a, pairB: b, id: i, isTeam: true
+    }));
   } else {
     const inputs = [...document.querySelectorAll('#names-list .inp-s')];
     players = inputs.map((el, i) => ({ name: el.value.trim() || `参加者 ${i+1}`, id: i }));
@@ -694,6 +805,9 @@ function startTournament() {
 function backToSetup() {
   document.getElementById('tournament').style.display = 'none';
   document.getElementById('setup').style.display = 'flex';
+  // ダブルスのペアプレビューをリセット
+  currentPairs = [];
+  document.getElementById('pairs-preview').style.display = 'none';
 }
 
 // ── Tournament logic ──────────────────────────────────────
