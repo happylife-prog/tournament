@@ -379,31 +379,63 @@
     /* 待機中スロット */
     .p-name.tbd { color: #3a3a52; font-style: italic; font-size: 0.78rem; }
 
-    /* 取り消しボタン：2スロットの境界線中央に配置してスコアと重ならないよう */
+    /* 取り消しボタン：2スロット中央に配置、円形デザイン */
     .btn-undo {
       position: absolute; top: 50%; right: 6px;
       transform: translateY(-50%);
-      background: rgba(20,20,30,.85); border: 1px solid rgba(255,255,255,.12);
-      border-radius: 5px; color: #55556a; font-size: 0.68rem; line-height: 1;
-      padding: 2px 6px; cursor: pointer; transition: all .15s;
+      width: 22px; height: 22px; padding: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(255,60,60,.08); border: 1px solid rgba(255,100,100,.18);
+      border-radius: 50%; color: rgba(255,130,130,.4);
+      font-size: 0.82rem; line-height: 1;
+      cursor: pointer; transition: all .22s ease;
       font-family: inherit; z-index: 5;
     }
-    .btn-undo:hover { background: rgba(255,80,80,.18); border-color: rgba(255,80,80,.4); color: #ff8888; }
+    .btn-undo:hover {
+      background: rgba(255,60,60,.22); border-color: rgba(255,80,80,.55);
+      color: #ff8888; transform: translateY(-50%) rotate(-40deg);
+      box-shadow: 0 0 8px rgba(255,60,60,.25);
+    }
 
     /* 履歴エリア */
     #area-h { flex: 1; min-height: 0; overflow-y: auto; padding: 20px 24px; display: none; }
     #area-h.visible { display: block; }
     .history-empty { color: var(--muted); font-size: 0.84rem; text-align: center; padding: 40px 0; }
-    .history-item {
-      display: flex; align-items: center; gap: 10px; padding: 10px 14px;
-      border-bottom: 1px solid var(--border-dim); font-size: 0.82rem;
+    /* ブラケットスナップ */
+    .hist-section-title { font-size: 0.72rem; font-weight: 700; letter-spacing: .08em; color: var(--muted); text-transform: uppercase; }
+    .hist-bracket-scroll { overflow-x: auto; padding: 16px 0 8px; -webkit-overflow-scrolling: touch; }
+    .hist-log-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .btn-hist-clear {
+      font-size: 0.72rem; padding: 4px 10px; border-radius: 6px;
+      background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1);
+      color: var(--muted); cursor: pointer; transition: all .15s; font-family: inherit;
     }
-    .history-item:last-child { border-bottom: none; }
-    .h-time   { color: var(--muted); font-size: 0.72rem; flex-shrink: 0; min-width: 42px; }
+    .btn-hist-clear:hover { background: rgba(255,50,50,.15); border-color: rgba(255,80,80,.35); color: #ff8888; }
+    /* 試合ログ */
+    .history-group { margin-bottom: 4px; }
+    .history-round-lbl {
+      font-size: 0.65rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+      color: #3a3a50; padding: 10px 0 4px; border-bottom: 1px solid rgba(255,255,255,.04);
+      margin-bottom: 2px;
+    }
+    .history-item {
+      display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+      border-radius: 8px; font-size: 0.82rem; transition: background .12s;
+    }
+    .history-item:hover { background: rgba(255,255,255,.03); }
+    .h-time   { color: var(--muted); font-size: 0.68rem; flex-shrink: 0; min-width: 40px; }
     .h-badge  { font-size: 0.7rem; flex-shrink: 0; }
-    .h-winner { color: var(--gold-soft); font-weight: 700; flex: 1; }
-    .h-score  { color: var(--muted); font-size: 0.78rem; flex-shrink: 0; min-width: 36px; text-align: center; }
-    .h-loser  { color: #44445a; font-size: 0.78rem; flex: 1; text-align: right; }
+    .h-winner { color: var(--gold-soft); font-weight: 700; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .h-score  { color: #5a5a7a; font-size: 0.78rem; flex-shrink: 0; min-width: 38px; text-align: center; background: rgba(255,255,255,.04); border-radius: 4px; padding: 1px 5px; }
+    .h-loser  { color: #3a3a52; font-size: 0.78rem; flex: 1; text-align: right; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .btn-hist-del {
+      flex-shrink: 0; width: 20px; height: 20px; padding: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: none; border: 1px solid transparent;
+      border-radius: 50%; color: #2a2a38; font-size: 0.8rem; line-height: 1;
+      cursor: pointer; transition: all .15s; font-family: inherit;
+    }
+    .btn-hist-del:hover { background: rgba(255,50,50,.18); border-color: rgba(255,80,80,.4); color: #ff8888; }
 
     /* Bye auto-label */
     .bye-auto { position: absolute; width: 200px; display: flex; align-items: center; gap: 8px; padding: 4px 12px; pointer-events: none; }
@@ -507,6 +539,19 @@
     </div>
     <!-- 履歴 -->
     <div id="area-h">
+      <!-- トーナメント表スナップショット -->
+      <div id="hist-bracket-section" style="display:none;">
+        <div class="hist-section-title">📊 トーナメント表</div>
+        <div class="hist-bracket-scroll">
+          <div id="hist-bw" style="position:relative;display:inline-block;pointer-events:none;"></div>
+        </div>
+        <div style="border-top:1px solid var(--border-dim); margin:16px 0 0;"></div>
+      </div>
+      <!-- 試合ログ -->
+      <div class="hist-log-header">
+        <span class="hist-section-title">📋 試合ログ</span>
+        <button class="btn-hist-clear" id="btn-hist-clear" onclick="clearHistory()">🗑 全削除</button>
+      </div>
       <div id="history-list"><p class="history-empty">まだ試合結果がありません</p></div>
     </div>
   </div>
@@ -548,7 +593,7 @@ function lp(N0) {
   // 36px以上を保証（padding 8px×2 + フォント～20px = 実際の最小高さ）
   const slotH = Math.max(isDoubles ? 34 : 36, Math.min(isDoubles ? 50 : 42, Math.floor(400/N0)));
   const matchH = slotH * 2 + 2;
-  const gap    = Math.max(6, Math.min(16, Math.floor(90/N0)));
+  const gap    = Math.max(10, Math.min(24, Math.floor(120/N0)));
   return { slotH, matchH, gap, unit: matchH+gap, mw };
 }
 
@@ -757,6 +802,7 @@ function pick(rounds, ri, mi, player, bracketId) {
   const loser = m.p1 === player ? m.p2 : m.p1;
   // 履歴に追加
   matchHistory.push({
+    id: Date.now() + '_' + ri + '_' + mi,
     time: new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
     bracketId, ri, mi,
     winner: player.name,
@@ -958,24 +1004,81 @@ function showTab(tab) {
 }
 
 // ── 履歴描画 ─────────────────────────────────────────────
+function roundLabel(bracketId, ri) {
+  const rds = bracketId === 'w' ? winners?.rounds : losers?.rounds;
+  const R = rds?.length || 1;
+  if (bracketId === 'l') return `敗者 R${ri + 1}`;
+  const fromEnd = R - 1 - ri;
+  if (fromEnd === 0) return '決勝';
+  if (fromEnd === 1) return '準決勝';
+  if (fromEnd === 2) return '準々決勝';
+  return `ROUND ${ri + 1}`;
+}
+
 function renderHistory() {
   const panel = document.getElementById('history-list');
+  const bracketSection = document.getElementById('hist-bracket-section');
+  const clearBtn = document.getElementById('btn-hist-clear');
   if (!panel) return;
+
+  // トーナメント表スナップショット
+  if (bracketSection) {
+    if (winners && matchHistory.length > 0) {
+      bracketSection.style.display = '';
+      const hbw = document.getElementById('hist-bw');
+      if (hbw) {
+        hbw.innerHTML = '';
+        renderBracket('w', 'hist-bw', 'hist-canvas-w');
+      }
+    } else {
+      bracketSection.style.display = 'none';
+    }
+  }
+  if (clearBtn) clearBtn.style.display = matchHistory.length > 0 ? '' : 'none';
+
   if (matchHistory.length === 0) {
     panel.innerHTML = '<p class="history-empty">まだ試合結果がありません</p>';
     return;
   }
-  panel.innerHTML = [...matchHistory].reverse().map(e => {
-    const scoreStr = (e.s1 !== '' && e.s2 !== '') ? `${e.s1}–${e.s2}` : '';
-    const badge    = e.bracketId === 'w' ? '🏆' : '💔';
-    return `<div class="history-item">
-      <span class="h-time">${e.time}</span>
-      <span class="h-badge">${badge}</span>
-      <span class="h-winner">★ ${h(e.winner)}</span>
-      <span class="h-score">${scoreStr}</span>
-      <span class="h-loser">vs ${h(e.loser)}</span>
-    </div>`;
-  }).join('');
+
+  // ラウンド別グループ化
+  const groups = new Map();
+  matchHistory.forEach(e => {
+    const key = `${e.bracketId}_${e.ri}`;
+    if (!groups.has(key)) groups.set(key, { label: roundLabel(e.bracketId, e.ri), items: [] });
+    groups.get(key).items.push(e);
+  });
+
+  let html = '';
+  groups.forEach(g => {
+    html += `<div class="history-group"><div class="history-round-lbl">${g.label}</div>`;
+    g.items.forEach(e => {
+      const scoreStr = (e.s1 !== '' && e.s2 !== '') ? `${e.s1} – ${e.s2}` : '–';
+      const badge = e.bracketId === 'w' ? '🏆' : '💔';
+      const eid = String(e.id).replace(/[^a-z0-9_]/gi, '_');
+      html += `<div class="history-item">
+        <span class="h-time">${e.time}</span>
+        <span class="h-badge">${badge}</span>
+        <span class="h-winner">★ ${h(e.winner)}</span>
+        <span class="h-score">${scoreStr}</span>
+        <span class="h-loser">vs ${h(e.loser)}</span>
+        <button class="btn-hist-del" onclick="deleteHistory('${eid}')" title="削除">×</button>
+      </div>`;
+    });
+    html += '</div>';
+  });
+  panel.innerHTML = html;
+}
+
+function deleteHistory(eid) {
+  const rawId = eid.replace(/_(\d)/g, (_, d) => d);
+  const idx = matchHistory.findIndex(e => String(e.id).replace(/[^a-z0-9_]/gi, '_') === eid);
+  if (idx >= 0) { matchHistory.splice(idx, 1); renderHistory(); }
+}
+
+function clearHistory() {
+  matchHistory = [];
+  renderHistory();
 }
 
 // ── Rendering ─────────────────────────────────────────────
@@ -1002,12 +1105,13 @@ function cy(ri, mi, unit, gap) {
   return (t + b) / 2;
 }
 
-function renderBracket(bracketId) {
+function renderBracket(bracketId, overrideContId, overrideCvId) {
   const rounds   = bracketId === 'w' ? winners?.rounds : losers?.rounds;
   if (!rounds) return;
 
-  const cont   = document.getElementById(bracketId === 'w' ? 'bracket-w' : 'bracket-l');
-  const cvId   = bracketId === 'w' ? 'canvas-w' : 'canvas-l';
+  const contId = overrideContId || (bracketId === 'w' ? 'bracket-w' : 'bracket-l');
+  const cvId   = overrideCvId  || (bracketId === 'w' ? 'canvas-w'  : 'canvas-l');
+  const cont   = document.getElementById(contId);
   const isLoss = bracketId === 'l';
 
   cont.querySelectorAll('.match-card,.round-lbl,.bye-auto').forEach(e => e.remove());
