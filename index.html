@@ -187,6 +187,7 @@
     }
     .tab-btn.active-w { background: rgba(240,165,0,.2); color: var(--gold); }
     .tab-btn.active-l { background: rgba(255,123,114,.2); color: var(--loss); }
+    .tab-btn.active-h { background: rgba(120,120,200,.2); color: #a0a0e0; }
     .tab-btn .tab-badge {
       display: inline-block; margin-left: 5px;
       font-size: 0.6rem; background: rgba(255,255,255,.1);
@@ -353,6 +354,35 @@
     .btn-see-bracket      { border-color: #3a3a4a; color: #9898a8; }
     .btn-see-bracket:hover { border-color: #6a6a8a; color: var(--text); }
 
+    /* 待機中スロット */
+    .p-name.tbd { color: #3a3a52; font-style: italic; font-size: 0.78rem; }
+
+    /* 取り消しボタン */
+    .btn-undo {
+      position: absolute; top: 3px; right: 3px;
+      background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
+      border-radius: 5px; color: #44445a; font-size: 0.7rem; line-height: 1;
+      padding: 2px 5px; cursor: pointer; transition: all .15s;
+      font-family: inherit; z-index: 5;
+    }
+    .btn-undo:hover { background: rgba(255,80,80,.15); border-color: rgba(255,80,80,.3); color: #ff8080; }
+    .match-card { position: relative; }
+
+    /* 履歴エリア */
+    #area-h { flex: 1; min-height: 0; overflow-y: auto; padding: 20px 24px; display: none; }
+    #area-h.visible { display: block; }
+    .history-empty { color: var(--muted); font-size: 0.84rem; text-align: center; padding: 40px 0; }
+    .history-item {
+      display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+      border-bottom: 1px solid var(--border-dim); font-size: 0.82rem;
+    }
+    .history-item:last-child { border-bottom: none; }
+    .h-time   { color: var(--muted); font-size: 0.72rem; flex-shrink: 0; min-width: 42px; }
+    .h-badge  { font-size: 0.7rem; flex-shrink: 0; }
+    .h-winner { color: var(--gold-soft); font-weight: 700; flex: 1; }
+    .h-score  { color: var(--muted); font-size: 0.78rem; flex-shrink: 0; min-width: 36px; text-align: center; }
+    .h-loser  { color: #44445a; font-size: 0.78rem; flex: 1; text-align: right; }
+
     /* Bye auto-label */
     .bye-auto { position: absolute; width: 200px; display: flex; align-items: center; gap: 8px; padding: 4px 12px; pointer-events: none; }
     .bye-auto.d  { width: 220px; }
@@ -430,7 +460,8 @@
     <span class="nav-brand" id="nav-brand">🏆 <b>TOURNAMENT</b></span>
     <div class="tab-group">
       <button class="tab-btn active-w" id="tab-w" onclick="showTab('w')">🏆 勝者</button>
-      <button class="tab-btn" id="tab-l" onclick="showTab('l')">💔 敗者 <span class="tab-badge" id="tab-badge">-</span></button>
+      <button class="tab-btn" id="tab-l" onclick="showTab('l')">💔 敗者 <span class="tab-badge" id="tab-badge">準備中</span></button>
+      <button class="tab-btn" id="tab-h" onclick="showTab('h')">📋 履歴</button>
     </div>
   </div>
 
@@ -446,6 +477,9 @@
         <span class="losers-pending-icon">⏳</span>
         <p>勝者ブラケットの第1ラウンドが<br>終わると敗者ブラケットが作られます</p>
       </div>
+    <!-- 履歴 -->
+    <div id="area-h">
+      <div id="history-list"><p class="history-empty">まだ試合結果がありません</p></div>
     </div>
   </div>
 
@@ -466,6 +500,7 @@
 <script>
 // ── Constants ──────────────────────────────────────────────
 const BYE      = { name: '—', isBye: true };
+const TBD      = { name: '待機中', isTBD: true }; // 敗者確定待ちスロット
 const MATCH_W  = 200;
 const MATCH_WD = 222; // doubles
 const ROUND_GAP = 58;
@@ -477,6 +512,7 @@ let currentPairs = [];
 let winners      = null; // { rounds }
 let losers       = null; // { rounds } or null
 let activeTab    = 'w';
+let matchHistory = []; // { time, bracketId, ri, mi, winner, loser, s1, s2 }
 
 // ── Layout ────────────────────────────────────────────────
 function lp(N0) {
@@ -604,6 +640,8 @@ function startTournament() {
 
   initBracket(players, 'winners');
   losers = null;
+  matchHistory = [];
+  preInitLosers(); // 敗者ブラケットをTBDで先行構築
   updateLosersTab();
 
   const brand = document.getElementById('nav-brand');
@@ -620,6 +658,7 @@ function backToSetup() {
   document.getElementById('tournament').style.display = 'none';
   document.getElementById('setup').style.display = 'flex';
   currentPairs = [];
+  matchHistory = [];
   document.getElementById('pairs-preview').style.display = 'none';
 }
 
@@ -676,11 +715,21 @@ function adv(rounds, ri, mi, player) {
 
 function pick(rounds, ri, mi, player, bracketId) {
   const m = rounds[ri][mi];
-  if (m.winner || !player || player.isBye) return;
+  if (m.winner || !player || player.isBye || player.isTBD) return;
+  const loser = m.p1 === player ? m.p2 : m.p1;
+  // 履歴に追加
+  matchHistory.push({
+    time: new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+    bracketId, ri, mi,
+    winner: player.name,
+    loser:  loser?.name ?? '—',
+    s1: m.s1, s2: m.s2
+  });
   adv(rounds, ri, mi, player);
   autoByes(rounds);
   if (bracketId === 'w') tryBuildLosers();
   renderAll();
+  renderHistory();
   checkWinner(bracketId);
 }
 
@@ -704,39 +753,123 @@ function storeScore(bracketId, ri, mi, slot, val) {
   // 自動勝者選択(上のpick)時のみ再描画される。
 }
 
-// ── 敗者ブラケット構築 ────────────────────────────────────
+// ── 敗者ブラケット ────────────────────────────────────────
+
+// 勝者ブラケットR0の実試合数（bye除く）
+function countRealMatchesR0() {
+  if (!winners) return 0;
+  return winners.rounds[0].filter(m => !(m.p1 === BYE || m.p2 === BYE) &&
+    !(m.p1?.isBye || m.p2?.isBye)).length;
+}
+
+// 現在判明している敗者リスト（順番固定）
+function collectKnownLosers() {
+  if (!winners) return [];
+  return winners.rounds[0].reduce((arr, m) => {
+    if (m.winner && !m.winner.isBye && !m.winner.isTBD) {
+      const loser = m.p1 === m.winner ? m.p2 : m.p1;
+      if (loser && !loser.isBye && !loser.isTBD) arr.push(loser);
+    }
+    return arr;
+  }, []);
+}
+
+// TBDスロットで敗者ブラケットを先行構築（トーナメント開始時に呼ぶ）
+function preInitLosers() {
+  const n = countRealMatchesR0();
+  if (n < 2) return;
+  const tbds = Array.from({ length: n }, () => ({ ...TBD }));
+  initBracket(tbds, 'losers');
+}
+
+// TBDスロットを既知の敗者で埋める
+function fillLosersSlots(knownLosers) {
+  if (!losers) return;
+  let li = 0;
+  for (const m of losers.rounds[0]) {
+    // 既に実プレイヤーが入っているスロットは li をカウントアップしてスキップ
+    if (m.p1 && !m.p1.isTBD) { li++; }
+    else if (m.p1?.isTBD && li < knownLosers.length) { m.p1 = knownLosers[li++]; }
+    if (m.p2 && !m.p2.isTBD) { li++; }
+    else if (m.p2?.isTBD && li < knownLosers.length) { m.p2 = knownLosers[li++]; }
+  }
+}
+
+// 敗者が出るたびに随時反映
 function tryBuildLosers() {
   if (!winners) return;
-  const r0 = winners.rounds[0];
-  // 第1ラウンドが全試合終了しているか
-  const allDone = r0.every(m => m.winner !== null);
-  if (!allDone) return;
-  if (losers) return; // 既に構築済み
+  const knownLosers = collectKnownLosers();
+  if (knownLosers.length === 0) return;
 
-  // 敗者を試合順に収集（ランダムでなく順番固定）
-  const losersArr = [];
-  r0.forEach(m => {
-    if (m.winner && !m.winner.isBye) {
-      const loser = m.p1 === m.winner ? m.p2 : m.p1;
-      if (loser && !loser.isBye) losersArr.push(loser);
-    }
-  });
-
-  if (losersArr.length < 2) return;
-  initBracket(losersArr, 'losers');
+  if (!losers) {
+    preInitLosers();
+    if (!losers) return;
+  }
+  fillLosersSlots(knownLosers);
   updateLosersTab();
+}
+
+// 取り消し後の敗者ブラケット再構築
+function rebuildLosersAfterUndo() {
+  const knownLosers = collectKnownLosers();
+  losers = null;
+  if (knownLosers.length === 0) { updateLosersTab(); return; }
+  preInitLosers();
+  if (!losers) return;
+  let li = 0;
+  for (const m of losers.rounds[0]) {
+    if (m.p1?.isTBD && li < knownLosers.length) m.p1 = knownLosers[li++];
+    if (m.p2?.isTBD && li < knownLosers.length) m.p2 = knownLosers[li++];
+  }
+  updateLosersTab();
+}
+
+// 試合結果の取り消し（カスケード）
+function undoPick(rounds, ri, mi, bracketId) {
+  const m = rounds[ri][mi];
+  if (!m.winner || m.winner.isBye || m.winner.isTBD) return;
+  const prevWinner = m.winner;
+
+  // 次ラウンドから再帰的に取り消し
+  if (ri + 1 < rounds.length) {
+    const nmi = mi >> 1;
+    const nm  = rounds[ri + 1][nmi];
+    if (nm.winner) undoPick(rounds, ri + 1, nmi, bracketId);
+    if (mi % 2 === 0) nm.p1 = null; else nm.p2 = null;
+  }
+
+  // 履歴から削除（最後の一致エントリ）
+  const idx = matchHistory.map((h,i)=>i).reverse()
+    .find(i => matchHistory[i].bracketId === bracketId && matchHistory[i].ri === ri && matchHistory[i].mi === mi);
+  if (idx !== undefined) matchHistory.splice(idx, 1);
+
+  m.winner = null;
+  m.s1 = '';
+  m.s2 = '';
+
+  // 勝者ブラケットR0の取り消しなら敗者ブラケットも再構築
+  if (bracketId === 'w' && ri === 0) rebuildLosersAfterUndo();
+
+  renderAll();
+  renderHistory();
 }
 
 function updateLosersTab() {
   const badge = document.getElementById('tab-badge');
-  if (losers) {
+  if (!winners) { badge.textContent = '準備中'; badge.style.background = ''; badge.style.color = ''; return; }
+  const known    = collectKnownLosers().length;
+  const expected = countRealMatchesR0();
+  if (known === 0) {
+    badge.textContent = '準備中';
+    badge.style.background = ''; badge.style.color = '';
+  } else if (known < expected) {
+    badge.textContent = `${known}/${expected}人`;
+    badge.style.background = 'rgba(255,123,114,.15)';
+    badge.style.color = 'rgba(255,123,114,.7)';
+  } else {
     badge.textContent = '準備OK';
     badge.style.background = 'rgba(255,123,114,.25)';
     badge.style.color = 'var(--loss)';
-  } else {
-    badge.textContent = '準備中';
-    badge.style.background = '';
-    badge.style.color = '';
   }
 }
 
@@ -773,20 +906,44 @@ function showTab(tab) {
   activeTab = tab;
   document.getElementById('area-w').classList.toggle('visible', tab === 'w');
   document.getElementById('area-l').classList.toggle('visible', tab === 'l');
+  document.getElementById('area-h').classList.toggle('visible', tab === 'h');
   document.getElementById('tab-w').className = 'tab-btn' + (tab === 'w' ? ' active-w' : '');
   document.getElementById('tab-l').className = 'tab-btn' + (tab === 'l' ? ' active-l' : '');
+  document.getElementById('tab-h').className = 'tab-btn' + (tab === 'h' ? ' active-h' : '');
 
-  // 敗者ブラケットペンディング表示切替
+  // 敗者ブラケットペンディング表示切替（losersがあれば隠す）
   const pending = document.getElementById('losers-pending');
   if (pending) pending.style.display = losers ? 'none' : 'flex';
 
   if (tab === 'l' && losers) renderBracket('l');
+  if (tab === 'h') renderHistory();
+}
+
+// ── 履歴描画 ─────────────────────────────────────────────
+function renderHistory() {
+  const panel = document.getElementById('history-list');
+  if (!panel) return;
+  if (matchHistory.length === 0) {
+    panel.innerHTML = '<p class="history-empty">まだ試合結果がありません</p>';
+    return;
+  }
+  panel.innerHTML = [...matchHistory].reverse().map(e => {
+    const scoreStr = (e.s1 !== '' && e.s2 !== '') ? `${e.s1}–${e.s2}` : '';
+    const badge    = e.bracketId === 'w' ? '🏆' : '💔';
+    return `<div class="history-item">
+      <span class="h-time">${e.time}</span>
+      <span class="h-badge">${badge}</span>
+      <span class="h-winner">★ ${h(e.winner)}</span>
+      <span class="h-score">${scoreStr}</span>
+      <span class="h-loser">vs ${h(e.loser)}</span>
+    </div>`;
+  }).join('');
 }
 
 // ── Rendering ─────────────────────────────────────────────
 function renderAll() {
   renderBracket('w');
-  if (losers && activeTab === 'l') renderBracket('l');
+  if (losers) renderBracket('l'); // TBDスロットも含めて常に描画
   updateLosersTab();
   const pending = document.getElementById('losers-pending');
   if (pending) pending.style.display = losers ? 'none' : 'flex';
@@ -881,6 +1038,18 @@ function renderBracket(bracketId) {
         card.style.cssText = `left:${x}px;top:${topY}px;`;
         card.appendChild(makeSlot(m.p1, m, ri, mi, matchH, bracketId, isLoss));
         card.appendChild(makeSlot(m.p2, m, ri, mi, matchH, bracketId, isLoss));
+        // 完了試合に取り消しボタン
+        if (m.winner && !m.winner.isBye && !m.winner.isTBD) {
+          const undoBtn = document.createElement('button');
+          undoBtn.className = 'btn-undo';
+          undoBtn.title = '試合結果を取り消す';
+          undoBtn.textContent = '↺';
+          undoBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            undoPick(bracketId === 'w' ? winners.rounds : losers.rounds, ri, mi, bracketId);
+          });
+          card.appendChild(undoBtn);
+        }
         cont.appendChild(card);
       }
 
@@ -905,18 +1074,22 @@ function renderBracket(bracketId) {
 function makeSlot(player, m, ri, mi, matchH, bracketId, isLoss) {
   const el     = document.createElement('div');
   const slotH  = Math.floor((matchH - 2) / 2);
-  const real   = player && !player.isBye;
-  const both   = m.p1 && !m.p1.isBye && m.p2 && !m.p2.isBye;
   const slot1  = player === m.p1; // 上スロットか
   const scoreVal = slot1 ? m.s1 : m.s2;
   const scoreSlotNum = slot1 ? 1 : 2;
+
+  const real   = player && !player.isBye && !player.isTBD;
+  const both   = m.p1 && !m.p1.isBye && !m.p1.isTBD &&
+                 m.p2 && !m.p2.isBye && !m.p2.isTBD;
 
   el.className = 'p-slot' + (isLoss ? ' loss-bracket' : '');
   el.style.minHeight = slotH + 'px';
 
   if (!real) {
     el.classList.add('empty');
-    el.innerHTML = '<span class="p-name">—</span>';
+    el.innerHTML = player?.isTBD
+      ? '<span class="p-name tbd">⏳ 待機中</span>'
+      : '<span class="p-name">—</span>';
     return el;
   }
 
@@ -977,6 +1150,14 @@ function makeScoreEl(m, ri, mi, slotNum, val, bracketId, isWinner, isLoser) {
   inp.addEventListener('touchstart', stopAll, { passive: true });
   inp.addEventListener('touchend',   stopAll);
   inp.addEventListener('input', e => {
+    e.stopPropagation();
+    // タイピング中はデータを保存するだけ（再描画・自動判定なし → 10が1にならない）
+    const rds = bracketId === 'w' ? winners.rounds : losers.rounds;
+    const mm  = rds[ri][mi];
+    if (slotNum === 1) mm.s1 = e.target.value; else mm.s2 = e.target.value;
+  });
+  inp.addEventListener('blur', e => {
+    // 入力確定後に自動勝者判定
     e.stopPropagation();
     storeScore(bracketId, ri, mi, slotNum, e.target.value);
   });
