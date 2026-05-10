@@ -281,9 +281,19 @@
     .score-input::-webkit-inner-spin-button,
     .score-input::-webkit-outer-spin-button { -webkit-appearance: none; }
     .score-input[type=number] { -moz-appearance: textfield; }
-    .score-badge { font-size: 0.78rem; font-weight: 700; color: #38384a; flex-shrink: 0; min-width: 22px; text-align: right; }
+    .score-badge { font-size: 0.85rem; font-weight: 700; color: #6a6a8a; flex-shrink: 0; min-width: 26px; text-align: right; }
     .p-slot.winner .score-badge { color: var(--gold-soft); }
-    .p-slot.loser  .score-badge { color: #202028; }
+    .p-slot.loser  .score-badge { color: #5a5a72; }
+    /* 試合カード内スコアまとめ表示 */
+    .match-score-bar {
+      display: flex; justify-content: center; align-items: center;
+      gap: 4px; padding: 2px 10px 4px;
+      font-size: 0.72rem; font-weight: 700; letter-spacing: .04em;
+      color: #44445a; border-top: 1px solid rgba(255,255,255,.04);
+    }
+    .match-score-bar.has-score { color: #8888aa; }
+    .match-score-bar .msb-w { color: var(--gold-soft); }
+    .match-score-bar .msb-l { color: #5a5a72; }
 
     /* ダブルス ペア表示 */
     .p-pair { flex: 1; display: flex; flex-direction: column; gap: 1px; overflow: hidden; min-width: 0; }
@@ -1062,6 +1072,23 @@ function renderBracket(bracketId) {
         card.style.cssText = `left:${x}px;top:${topY}px;`;
         card.appendChild(makeSlot(m.p1, m, ri, mi, matchH, bracketId, isLoss));
         card.appendChild(makeSlot(m.p2, m, ri, mi, matchH, bracketId, isLoss));
+        // 完了試合: カード下部にスコアバー表示
+        if (m.winner && !m.winner.isBye && !m.winner.isTBD) {
+          const bar  = document.createElement('div');
+          const hasS = m.s1 !== '' || m.s2 !== '';
+          bar.className = 'match-score-bar' + (hasS ? ' has-score' : '');
+          // 勝者がp1かp2かで表示順を決める
+          const wIsP1 = m.winner === m.p1;
+          const ws = wIsP1 ? m.s1 : m.s2;
+          const ls = wIsP1 ? m.s2 : m.s1;
+          const wsD = ws !== '' ? ws : '–';
+          const lsD = ls !== '' ? ls : '–';
+          bar.innerHTML = hasS
+            ? `<span class="msb-w">★ ${wsD}</span><span>–</span><span class="msb-l">${lsD}</span>`
+            : `<span>スコアなし</span>`;
+          card.appendChild(bar);
+        }
+
         // 完了試合に取り消しボタン
         if (m.winner && !m.winner.isBye && !m.winner.isTBD) {
           const undoBtn = document.createElement('button');
@@ -1154,10 +1181,10 @@ function makeSlot(player, m, ri, mi, matchH, bracketId, isLoss) {
 
 function makeScoreEl(m, ri, mi, slotNum, val, bracketId, isWinner, isLoser) {
   if (isWinner || isLoser) {
-    // 完了試合: バッジ表示
+    // 完了試合: バッジ表示（未入力でも「–」を表示）
     const span = document.createElement('span');
     span.className = 'score-badge';
-    span.textContent = val !== '' ? val : '';
+    span.textContent = val !== '' ? val : '–';
     return span;
   }
   // 進行中: 入力欄
