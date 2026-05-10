@@ -4,8 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>TOURNAMENT</title>
-
-  <!-- PWA -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#f0a500">
   <meta name="mobile-web-app-capable" content="yes">
@@ -13,7 +11,6 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Tournament">
   <link rel="apple-touch-icon" href="icon.svg">
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
@@ -21,25 +18,25 @@
     * { -webkit-tap-highlight-color: transparent; }
 
     :root {
-      --bg:          #08080c;
-      --bg-card:     #0e0e14;
-      --bg-input:    #0a0a0f;
-      --border:      #222230;
-      --border-dim:  #16161f;
-      --gold:        #f0a500;
-      --gold-soft:   #fbbf24;
-      --gold-glow:   rgba(240,165,0,.18);
-      --text:        #f4f4f6;
-      --muted:       #6b6b80;
-      --subtle:      #2e2e3a;
-      --accent:      #7c6cff;
-      --doubles:     #6caaff;
+      --bg:         #08080c;
+      --bg-card:    #0e0e14;
+      --bg-input:   #0a0a0f;
+      --border:     #222230;
+      --border-dim: #16161f;
+      --gold:       #f0a500;
+      --gold-soft:  #fbbf24;
+      --gold-glow:  rgba(240,165,0,.18);
+      --text:       #f4f4f6;
+      --muted:      #6b6b80;
+      --subtle:     #2e2e3a;
+      --doubles:    #6caaff;
+      --loss:       #ff7b72;
+      --loss-glow:  rgba(255,123,114,.18);
     }
 
     body {
-      font-family: 'Inter', 'Meiryo', sans-serif;
-      background: var(--bg);
-      color: var(--text);
+      font-family: 'Inter','Meiryo',sans-serif;
+      background: var(--bg); color: var(--text);
       min-height: 100vh;
       -webkit-font-smoothing: antialiased;
     }
@@ -47,566 +44,342 @@
     /* ━━━━ SETUP ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
     #setup {
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
       padding: 48px 20px;
     }
-
-    .hero { text-align: center; margin-bottom: 52px; }
-
+    .hero { text-align: center; margin-bottom: 44px; }
     .hero-icon {
-      display: inline-block;
-      font-size: 2.8rem;
-      margin-bottom: 18px;
+      display: inline-block; font-size: 2.8rem; margin-bottom: 18px;
       filter: drop-shadow(0 0 28px rgba(240,165,0,.55));
       animation: floatIcon 3s ease-in-out infinite;
     }
-
     @keyframes floatIcon {
       0%,100% { transform: translateY(0); }
       50%      { transform: translateY(-6px); }
     }
-
     .hero-title {
-      font-size: 3.4rem;
-      font-weight: 900;
-      letter-spacing: -.05em;
-      line-height: 1;
-      background: linear-gradient(160deg, #fff 30%, #6b6b80);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      font-size: 3.4rem; font-weight: 900;
+      letter-spacing: -.05em; line-height: 1;
+      background: linear-gradient(160deg,#fff 30%,#6b6b80);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
     }
-
     .hero-sub {
-      margin-top: 10px;
-      font-size: 0.72rem;
-      font-weight: 600;
-      letter-spacing: .22em;
-      text-transform: uppercase;
-      color: var(--muted);
+      margin-top: 10px; font-size: 0.72rem; font-weight: 600;
+      letter-spacing: .22em; text-transform: uppercase; color: var(--muted);
       transition: color .3s;
     }
     .hero-sub.is-doubles { color: var(--doubles); }
 
     .setup-panel {
-      width: 100%;
-      max-width: 480px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 36px 32px;
+      width: 100%; max-width: 480px;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 20px; padding: 32px 28px;
       box-shadow: 0 30px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.03) inset;
     }
 
-    /* ── モード切替トグル ── */
-    .mode-toggle {
-      display: flex;
-      gap: 0;
-      background: var(--bg-input);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 4px;
-      margin-bottom: 28px;
-    }
+    /* モード切替 */
+    .mode-toggle { display: flex; gap: 0; background: var(--bg-input); border: 1px solid var(--border); border-radius: 12px; padding: 4px; margin-bottom: 24px; }
     .mode-btn {
-      flex: 1;
-      border: none;
-      border-radius: 9px;
-      font-family: inherit;
-      font-size: 0.82rem;
-      font-weight: 700;
-      letter-spacing: .04em;
-      padding: 10px 12px;
-      cursor: pointer;
-      transition: all .2s;
-      background: transparent;
-      color: var(--muted);
-      touch-action: manipulation;
+      flex: 1; border: none; border-radius: 9px; font-family: inherit;
+      font-size: 0.82rem; font-weight: 700; letter-spacing: .04em;
+      padding: 10px 8px; cursor: pointer; transition: all .2s;
+      background: transparent; color: var(--muted); touch-action: manipulation;
     }
-    .mode-btn.active {
-      background: linear-gradient(135deg, var(--gold), #c47d00);
-      color: #000;
-      box-shadow: 0 2px 12px rgba(240,165,0,.3);
-    }
-    .mode-btn.active.doubles-active {
-      background: linear-gradient(135deg, var(--doubles), #3a7ad4);
-      color: #fff;
-      box-shadow: 0 2px 12px rgba(108,170,255,.3);
-    }
+    .mode-btn.active { background: linear-gradient(135deg,var(--gold),#c47d00); color: #000; box-shadow: 0 2px 12px rgba(240,165,0,.3); }
+    .mode-btn.active.d { background: linear-gradient(135deg,var(--doubles),#3a7ad4); color: #fff; box-shadow: 0 2px 12px rgba(108,170,255,.3); }
 
-    .lbl {
-      display: block;
-      font-size: 0.68rem;
-      font-weight: 700;
-      letter-spacing: .14em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 10px;
-    }
-
-    .field-row { display: flex; gap: 10px; align-items: center; margin-bottom: 26px; }
+    .lbl { display: block; font-size: 0.68rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+    .field-row { display: flex; gap: 10px; align-items: center; margin-bottom: 22px; }
 
     .input {
-      background: var(--bg-input);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      color: var(--text);
-      font-family: inherit;
-      font-size: 16px;
-      padding: 11px 15px;
-      transition: border-color .2s, box-shadow .2s;
-      -webkit-appearance: none;
-      appearance: none;
+      background: var(--bg-input); border: 1px solid var(--border); border-radius: 10px;
+      color: var(--text); font-family: inherit; font-size: 16px;
+      padding: 11px 15px; transition: border-color .2s,box-shadow .2s;
+      -webkit-appearance: none; appearance: none;
     }
     .input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold-glow); }
     .input-num  { width: 86px; }
     .input-full { width: 100%; }
 
-    .btn {
-      border: none;
-      border-radius: 10px;
-      font-family: inherit;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all .17s;
-      white-space: nowrap;
-    }
-
-    .btn-ghost {
-      background: var(--border-dim);
-      border: 1px solid var(--border);
-      color: var(--muted);
-      padding: 11px 16px;
-      font-size: 0.84rem;
-    }
+    .btn { border: none; border-radius: 10px; font-family: inherit; font-weight: 600; cursor: pointer; transition: all .17s; white-space: nowrap; touch-action: manipulation; -webkit-user-select: none; user-select: none; }
+    .btn-ghost { background: var(--border-dim); border: 1px solid var(--border); color: var(--muted); padding: 11px 16px; font-size: 0.84rem; }
     .btn-ghost:hover { background: var(--border); color: var(--text); }
+    .btn-ghost:active { background: var(--border); color: var(--text); }
 
     .btn-start {
-      background: linear-gradient(135deg, var(--gold), #c47d00);
-      color: #000;
-      font-weight: 800;
-      font-size: 0.95rem;
-      letter-spacing: .01em;
-      width: 100%;
-      padding: 15px;
-      margin-top: 6px;
+      background: linear-gradient(135deg,var(--gold),#c47d00); color: #000;
+      font-weight: 800; font-size: 0.95rem; letter-spacing: .01em;
+      width: 100%; padding: 15px; margin-top: 8px;
       box-shadow: 0 4px 24px rgba(240,165,0,.28);
     }
-    .btn-start:hover { opacity: .88; transform: translateY(-1px); box-shadow: 0 8px 32px rgba(240,165,0,.38); }
-    .btn-start:active { transform: translateY(0); }
-    .btn-start.doubles-mode {
-      background: linear-gradient(135deg, var(--doubles), #3a7ad4);
-      box-shadow: 0 4px 24px rgba(108,170,255,.28);
-    }
+    .btn-start:hover { opacity: .88; transform: translateY(-1px); }
+    .btn-start:active { opacity: .85; transform: none; }
+    .btn-start.d { background: linear-gradient(135deg,var(--doubles),#3a7ad4); color: #fff; box-shadow: 0 4px 24px rgba(108,170,255,.28); }
 
-    .names-scroll {
-      max-height: 360px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 7px;
-      margin-bottom: 24px;
-      padding-right: 2px;
-    }
+    /* 名前リスト */
+    .names-scroll { max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 7px; margin-bottom: 18px; padding-right: 2px; }
     .names-scroll::-webkit-scrollbar { width: 3px; }
     .names-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-    /* シングルス行 */
     .name-row { display: flex; align-items: center; gap: 10px; }
     .name-row .input { flex: 1; margin: 0; }
-    .name-idx {
-      font-size: 0.7rem; font-weight: 700;
-      color: var(--subtle); width: 18px; text-align: right; flex-shrink: 0;
-    }
+    .name-idx { font-size: 0.7rem; font-weight: 700; color: var(--subtle); width: 18px; text-align: right; flex-shrink: 0; }
 
-    /* ダブルス行 */
-    .doubles-inputs {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
+    /* 奇数 不戦勝セレクター */
+    .bye-section {
+      display: none; margin-bottom: 18px;
+      background: rgba(240,165,0,.06); border: 1px solid rgba(240,165,0,.2);
+      border-radius: 12px; padding: 14px 16px;
     }
-    .doubles-inputs .input {
-      width: 100%;
-      padding: 9px 13px;
-      font-size: 15px;
+    .bye-section .lbl { color: var(--gold); margin-bottom: 8px; }
+    .bye-select {
+      background: var(--bg-input); border: 1px solid rgba(240,165,0,.25);
+      border-radius: 10px; color: var(--text); font-family: inherit;
+      font-size: 15px; padding: 10px 14px; width: 100%;
+      -webkit-appearance: none; appearance: none; cursor: pointer;
     }
-    .doubles-sep {
-      font-size: 0.6rem;
-      font-weight: 700;
-      letter-spacing: .1em;
-      color: var(--doubles);
-      opacity: .6;
-      text-align: center;
-      flex-shrink: 0;
-      width: 18px;
-    }
-    /* ダブルスチームの区切り線 */
-    .name-row.is-doubles {
-      background: rgba(108,170,255,.03);
-      border: 1px solid rgba(108,170,255,.08);
-      border-radius: 10px;
-      padding: 8px 10px;
-    }
+    .bye-select:focus { outline: none; border-color: var(--gold); }
 
-    /* ━━━━ TOURNAMENT ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-    #tournament {
-      display: none;
-      flex-direction: column;
-      /* ✅ スクロール修正: 100dvh で高さを固定し overflow:hidden で外側スクロールを防ぐ */
-      height: 100dvh;
-      height: 100vh; /* dvh 非対応ブラウザ用フォールバック */
-      overflow: hidden;
-    }
-
-    .nav {
-      display: flex; align-items: center; gap: 14px;
-      padding: 14px 28px;
-      background: rgba(8,8,12,.97);
-      border-bottom: 1px solid var(--border-dim);
-      position: sticky; top: 0; z-index: 30;
-      flex-shrink: 0; /* navが縮まないように */
-    }
-    @supports (backdrop-filter: blur(1px)) {
-      .nav { background: rgba(8,8,12,.85); backdrop-filter: blur(16px); }
-    }
-    .nav-title { font-size: 0.9rem; font-weight: 700; color: var(--muted); flex: 1; }
-    .nav-title b { color: var(--gold); font-weight: 800; }
-    .nav-title b.doubles { color: var(--doubles); }
-
-    .bracket-wrap {
-      flex: 1;
-      /* ✅ スクロール修正: min-height:0 が必須（flex子要素をコンテンツ以下に縮小可能にする） */
-      min-height: 0;
-      overflow: auto;
-      padding: 44px 40px;
-      /* ✅ タブレット横向き: 両軸のタッチスクロールを明示 */
-      touch-action: pan-x pan-y;
-      -webkit-overflow-scrolling: touch;
-      overscroll-behavior: contain;
-    }
-    #bracket-container { position: relative; display: inline-block; }
-
-    /* Match cards */
-    .match-card {
-      position: absolute;
-      width: 182px;
-      background: var(--bg-card);
-      border: 1px solid var(--border-dim);
-      border-radius: 11px;
-      overflow: hidden;
-      transition: border-color .25s, box-shadow .25s;
-    }
-    /* ダブルス用: カードを広げる */
-    .match-card.doubles-card { width: 210px; }
-
-    .match-card.active {
-      border-color: rgba(240,165,0,.6);
-      box-shadow: 0 0 0 1px rgba(240,165,0,.15), 0 0 18px rgba(240,165,0,.12);
-      animation: cardPulse 2s ease-in-out infinite;
-    }
-    .match-card.done { border-color: var(--border-dim); }
-
-    @keyframes cardPulse {
-      0%, 100% { box-shadow: 0 0 0 1px rgba(240,165,0,.15), 0 0 18px rgba(240,165,0,.1); }
-      50%       { box-shadow: 0 0 0 1px rgba(240,165,0,.3),  0 0 28px rgba(240,165,0,.2); }
-    }
-
-    .p-slot {
-      display: flex; align-items: center;
-      padding: 10px 14px; min-height: 43px;
-      font-size: 0.87rem; gap: 9px;
-      user-select: none; cursor: default;
-      position: relative;
-      transition: background .15s;
-    }
-    /* ダブルスはペアを2行表示するため高さ確保 */
-    .p-slot.doubles-slot { min-height: 58px; align-items: flex-start; padding: 8px 12px; }
-    .p-slot + .p-slot { border-top: 1px solid var(--border-dim); }
-
-    .p-slot.clickable { cursor: pointer; touch-action: manipulation; }
-    .p-slot.clickable .p-name { color: #d4d4e0; }
-    .p-slot.clickable:hover,
-    .p-slot.clickable:active { background: rgba(240,165,0,.08); }
-    .p-slot.clickable:hover .p-name,
-    .p-slot.clickable:active .p-name { color: var(--gold-soft); }
-    .p-slot.clickable::after {
-      content: '▶';
-      font-size: 0.55rem;
-      color: rgba(240,165,0,.4);
-      flex-shrink: 0;
-      transition: color .15s, transform .15s;
-      margin-top: 4px;
-    }
-    .p-slot.clickable:hover::after,
-    .p-slot.clickable:active::after { color: var(--gold); transform: translateX(2px); }
-
-    .p-slot.winner {
-      background: linear-gradient(90deg, rgba(240,165,0,.13), transparent);
-    }
-    .p-slot.winner .p-name { color: var(--gold-soft); font-weight: 700; }
-    .p-slot.winner .p-idx  { color: rgba(240,165,0,.4); }
-
-    .p-slot.loser .p-name  { color: #28282f; }
-    .p-slot.loser .p-idx   { color: #1c1c22; }
-    .p-slot.empty .p-name  { color: var(--subtle); }
-
-    .p-idx  { font-size: 0.65rem; font-weight: 700; color: var(--subtle); width: 14px; text-align: right; flex-shrink: 0; }
-    .p-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #9898a8; }
-    .p-crown{ font-size: 0.72rem; flex-shrink: 0; opacity: .8; }
-
-    /* ダブルスのペア名2行 */
-    .p-pair {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      overflow: hidden;
-      min-width: 0;
-    }
-    .p-pair-a {
-      font-size: 0.83rem;
-      font-weight: 600;
-      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-      color: #9898a8;
-    }
-    .p-pair-b {
-      font-size: 0.76rem;
-      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-      color: #5a5a6e;
-    }
-    .p-slot.winner .p-pair-a { color: var(--gold-soft); }
-    .p-slot.winner .p-pair-b { color: rgba(240,165,0,.55); }
-    .p-slot.loser  .p-pair-a { color: #28282f; }
-    .p-slot.loser  .p-pair-b { color: #1c1c22; }
-    .p-slot.empty  .p-pair-a { color: var(--subtle); }
-
-    .round-lbl {
-      position: absolute;
-      font-size: 0.62rem; font-weight: 700;
-      letter-spacing: .15em; text-transform: uppercase;
-      color: var(--subtle); text-align: center;
-      transition: color .3s;
-    }
-    .round-lbl.current { color: rgba(240,165,0,.6); }
-
-    /* ━━━━ WINNER ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-    #winner-wrap {
-      display: none;
-      padding: 40px 20px 60px;
-      flex-shrink: 0;
-    }
-
-    .winner-box {
-      max-width: 420px;
-      margin: 0 auto;
-      background: var(--bg-card);
-      border: 1px solid #2c220a;
-      border-radius: 24px;
-      padding: 52px 40px 44px;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-      animation: riseIn .5s cubic-bezier(.22,1,.36,1) both;
-    }
-
-    .winner-box::before {
-      content: '';
-      position: absolute; inset: 0;
-      background: radial-gradient(ellipse at 50% -10%, rgba(240,165,0,.22) 0%, transparent 60%);
-      pointer-events: none;
-    }
-
-    .winner-box::after {
-      content: '';
-      position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-      width: 60%; height: 1px;
-      background: linear-gradient(90deg, transparent, var(--gold), transparent);
-    }
-
-    @keyframes riseIn {
-      from { opacity: 0; transform: translateY(28px) scale(.97); }
-      to   { opacity: 1; transform: translateY(0) scale(1); }
-    }
-
-    .w-trophy {
-      font-size: 3.8rem;
-      display: block;
-      margin-bottom: 20px;
-      filter: drop-shadow(0 0 30px rgba(240,165,0,.7));
-      animation: floatIcon 3s ease-in-out infinite;
-    }
-
-    .w-eyebrow {
-      font-size: 0.65rem; font-weight: 700;
-      letter-spacing: .22em; text-transform: uppercase;
-      color: var(--gold); margin-bottom: 10px;
-    }
-
-    .w-name {
-      font-size: 2.2rem; font-weight: 900;
-      letter-spacing: -.04em; color: var(--text);
-      line-height: 1.15;
-    }
-    /* ダブルス優勝: ペア名を2行に分けて表示 */
-    .w-name.doubles-winner {
-      font-size: 1.8rem;
-    }
-    .w-pair-a { display: block; color: var(--text); }
-    .w-pair-b { display: block; color: var(--gold-soft); font-size: .85em; margin-top: 4px; }
-
-    .w-sub { color: var(--muted); font-size: 0.82rem; margin-top: 10px; }
-
-    .btn-restart {
-      display: inline-block; margin-top: 32px;
-      background: transparent; border: 1px solid var(--border);
-      color: var(--muted); padding: 11px 28px;
-      border-radius: 10px; font-family: inherit;
-      font-weight: 600; font-size: 0.84rem; cursor: pointer;
-      transition: all .18s;
-    }
-    .btn-restart:hover { border-color: var(--gold); color: var(--gold); }
-
-    /* ━━━━ RESPONSIVE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-    .btn, .btn-restart, .btn-start {
-      touch-action: manipulation;
-      -webkit-user-select: none;
-      user-select: none;
-    }
-    .btn-start:active { opacity: .85; transform: none; }
-    .btn-ghost:active  { background: var(--border); color: var(--text); }
-    .btn-restart:active { border-color: var(--gold); color: var(--gold); }
-
-    /* タブレット (601px〜1024px) */
-    @media (min-width: 601px) and (max-width: 1024px) {
-      .setup-panel { max-width: 560px; }
-      .bracket-wrap { padding: 32px 24px; }
-      .nav { padding: 14px 20px; }
-    }
-
-    /* タブレット横向き: 高さが足りないときも bracket-wrap がスクロールできるように */
-    @media (max-height: 600px) and (orientation: landscape) {
-      #setup { justify-content: flex-start; padding-top: 32px; }
-      .hero  { margin-bottom: 28px; }
-      .hero-title { font-size: 2.4rem; }
-      .bracket-wrap { padding: 24px 20px; }
-    }
-
-    /* スマホ (〜600px) */
-    @media (max-width: 600px) {
-      .hero-title { font-size: 2.2rem; }
-      .setup-panel { padding: 24px 20px; }
-      .bracket-wrap { padding: 20px 12px; }
-      .nav { padding: 12px 16px; }
-      .w-name { font-size: 1.8rem; }
-      .winner-box { padding: 36px 24px 32px; }
-      .btn-start { font-size: 0.9rem; padding: 13px; }
-    }
-
-    /* ダブルスモード: 名前入力が増えるので最大高さ拡張 */
-    .doubles-mode-scroll { max-height: 440px; }
-
-    /* ── ランダムペアボタン ── */
+    /* ランダムペアボタン */
     .btn-randomize {
-      width: 100%;
-      padding: 13px;
-      margin-bottom: 14px;
-      background: rgba(108,170,255,.1);
-      border: 1px dashed rgba(108,170,255,.35);
-      color: var(--doubles);
-      font-family: inherit;
-      font-size: 0.88rem;
-      font-weight: 700;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: all .18s;
-      touch-action: manipulation;
-      letter-spacing: .02em;
+      display: none; width: 100%; padding: 12px; margin-bottom: 14px;
+      background: rgba(108,170,255,.1); border: 1px dashed rgba(108,170,255,.35);
+      color: var(--doubles); font-family: inherit; font-size: 0.88rem; font-weight: 700;
+      border-radius: 10px; cursor: pointer; transition: all .18s; touch-action: manipulation;
     }
     .btn-randomize:hover  { background: rgba(108,170,255,.18); border-style: solid; }
     .btn-randomize:active { background: rgba(108,170,255,.24); }
 
-    /* ── ペアプレビュー ── */
-    .pairs-preview {
-      display: none;
-      flex-direction: column;
-      gap: 6px;
-      margin-bottom: 16px;
-      background: rgba(108,170,255,.05);
-      border: 1px solid rgba(108,170,255,.12);
-      border-radius: 12px;
-      padding: 14px 14px 10px;
-      max-height: 300px;
-      overflow-y: auto;
-    }
+    /* ペアプレビュー */
+    .pairs-preview { display: none; flex-direction: column; gap: 6px; margin-bottom: 16px; background: rgba(108,170,255,.05); border: 1px solid rgba(108,170,255,.12); border-radius: 12px; padding: 12px 12px 8px; max-height: 260px; overflow-y: auto; }
     .pairs-preview::-webkit-scrollbar { width: 3px; }
     .pairs-preview::-webkit-scrollbar-thumb { background: rgba(108,170,255,.3); border-radius: 2px; }
+    .pairs-preview-hdr { font-size: 0.62rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--doubles); opacity: .7; margin-bottom: 6px; }
+    .pair-row { display: flex; align-items: center; gap: 10px; padding: 7px 10px; background: rgba(108,170,255,.06); border-radius: 8px; border: 1px solid rgba(108,170,255,.1); }
+    .pair-num { font-size: 0.65rem; font-weight: 700; color: rgba(108,170,255,.5); width: 16px; text-align: right; flex-shrink: 0; }
+    .pair-names { flex: 1; font-size: 0.84rem; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .pair-slash { color: rgba(108,170,255,.5); margin: 0 5px; font-weight: 300; }
 
-    .pairs-preview-header {
-      font-size: 0.62rem;
-      font-weight: 700;
-      letter-spacing: .16em;
-      text-transform: uppercase;
-      color: var(--doubles);
-      opacity: .7;
-      margin-bottom: 8px;
-    }
-    .pair-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px 10px;
-      background: rgba(108,170,255,.06);
-      border-radius: 8px;
-      border: 1px solid rgba(108,170,255,.1);
-    }
-    .pair-num {
-      font-size: 0.65rem;
-      font-weight: 700;
-      color: rgba(108,170,255,.5);
-      width: 16px;
-      text-align: right;
-      flex-shrink: 0;
-    }
-    .pair-names {
-      flex: 1;
-      font-size: 0.84rem;
+    /* ━━━━ TOURNAMENT ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+    #tournament {
+      display: none; flex-direction: column;
+      height: 100dvh; height: 100vh;
       overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-      color: var(--text);
     }
-    .pair-slash {
-      color: rgba(108,170,255,.5);
-      margin: 0 5px;
-      font-weight: 300;
+    .nav {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 20px;
+      background: rgba(8,8,12,.97); border-bottom: 1px solid var(--border-dim);
+      flex-shrink: 0; z-index: 30;
+    }
+    @supports (backdrop-filter:blur(1px)) { .nav { background: rgba(8,8,12,.85); backdrop-filter: blur(16px); } }
+    .nav-brand { font-size: 0.88rem; font-weight: 700; color: var(--muted); flex: 1; }
+    .nav-brand b { color: var(--gold); }
+    .nav-brand b.d { color: var(--doubles); }
+
+    /* タブ */
+    .tab-group { display: flex; gap: 4px; }
+    .tab-btn {
+      padding: 7px 14px; border: none; border-radius: 8px;
+      font-family: inherit; font-size: 0.78rem; font-weight: 700;
+      cursor: pointer; transition: all .18s; touch-action: manipulation;
+      background: var(--border-dim); color: var(--muted);
+    }
+    .tab-btn.active-w { background: rgba(240,165,0,.2); color: var(--gold); }
+    .tab-btn.active-l { background: rgba(255,123,114,.2); color: var(--loss); }
+    .tab-btn .tab-badge {
+      display: inline-block; margin-left: 5px;
+      font-size: 0.6rem; background: rgba(255,255,255,.1);
+      border-radius: 20px; padding: 1px 6px;
     }
 
-    /* Bye auto-advance label */
-    .bye-auto {
-      position: absolute;
-      width: 182px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 5px 14px;
+    .bracket-wrap {
+      flex: 1; min-height: 0;
+      overflow: auto; padding: 40px 36px;
+      touch-action: pan-x pan-y;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+    }
+    .bracket-area { display: none; }
+    .bracket-area.visible { display: block; }
+    #bracket-w, #bracket-l { position: relative; display: inline-block; }
+
+    /* Match cards */
+    .match-card {
+      position: absolute; width: 200px;
+      background: var(--bg-card); border: 1px solid var(--border-dim);
+      border-radius: 11px; overflow: hidden;
+      transition: border-color .25s, box-shadow .25s;
+    }
+    .match-card.doubles-card { width: 220px; }
+    .match-card.active-w {
+      border-color: rgba(240,165,0,.6);
+      box-shadow: 0 0 0 1px rgba(240,165,0,.15), 0 0 18px rgba(240,165,0,.1);
+      animation: pulseW 2s ease-in-out infinite;
+    }
+    .match-card.active-l {
+      border-color: rgba(255,123,114,.6);
+      box-shadow: 0 0 0 1px rgba(255,123,114,.15), 0 0 18px rgba(255,123,114,.1);
+      animation: pulseL 2s ease-in-out infinite;
+    }
+    .match-card.done { border-color: var(--border-dim); }
+    @keyframes pulseW {
+      0%,100% { box-shadow: 0 0 0 1px rgba(240,165,0,.15), 0 0 18px rgba(240,165,0,.1); }
+      50%      { box-shadow: 0 0 0 1px rgba(240,165,0,.3),  0 0 28px rgba(240,165,0,.2); }
+    }
+    @keyframes pulseL {
+      0%,100% { box-shadow: 0 0 0 1px rgba(255,123,114,.15), 0 0 18px rgba(255,123,114,.1); }
+      50%      { box-shadow: 0 0 0 1px rgba(255,123,114,.3),  0 0 28px rgba(255,123,114,.2); }
+    }
+
+    /* スロット */
+    .p-slot {
+      display: flex; align-items: center;
+      padding: 8px 12px; min-height: 42px; gap: 8px;
+      font-size: 0.86rem; user-select: none; cursor: default;
+      transition: background .15s; position: relative;
+    }
+    .p-slot + .p-slot { border-top: 1px solid var(--border-dim); }
+    .p-slot.clickable { cursor: pointer; touch-action: manipulation; }
+    .p-slot.clickable:hover, .p-slot.clickable:active { background: rgba(240,165,0,.08); }
+    .p-slot.clickable:hover .p-name, .p-slot.clickable:active .p-name { color: var(--gold-soft); }
+    .p-slot.winner { background: linear-gradient(90deg,rgba(240,165,0,.13),transparent); }
+    .p-slot.winner .p-name  { color: var(--gold-soft); font-weight: 700; }
+    .p-slot.loser  .p-name  { color: #2a2a35; }
+    .p-slot.empty  .p-name  { color: var(--subtle); }
+    /* 敗者ブラケットのスロットはロス色 */
+    .p-slot.clickable.loss-bracket:hover, .p-slot.clickable.loss-bracket:active { background: rgba(255,123,114,.08); }
+    .p-slot.clickable.loss-bracket:hover .p-name, .p-slot.clickable.loss-bracket:active .p-name { color: var(--loss); }
+    .p-slot.winner.loss-bracket { background: linear-gradient(90deg,rgba(255,123,114,.13),transparent); }
+    .p-slot.winner.loss-bracket .p-name { color: var(--loss); }
+
+    .p-name  { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #9898a8; }
+    .p-crown { font-size: 0.7rem; flex-shrink: 0; opacity: .8; }
+
+    /* スコア入力 */
+    .score-input {
+      width: 48px; min-height: 34px; flex-shrink: 0;
+      background: rgba(255,255,255,.07); border: 1px solid var(--border);
+      border-radius: 6px; color: var(--text); font-family: inherit;
+      font-size: 0.9rem; font-weight: 700; padding: 4px 6px;
+      text-align: center; -webkit-appearance: none; appearance: none;
+      transition: border-color .15s; cursor: text;
+      touch-action: manipulation;
+    }
+    .score-input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold-glow); }
+    .score-input::-webkit-inner-spin-button,
+    .score-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+    .score-input[type=number] { -moz-appearance: textfield; }
+    .score-badge { font-size: 0.78rem; font-weight: 700; color: #38384a; flex-shrink: 0; min-width: 22px; text-align: right; }
+    .p-slot.winner .score-badge { color: var(--gold-soft); }
+    .p-slot.loser  .score-badge { color: #202028; }
+
+    /* ダブルス ペア表示 */
+    .p-pair { flex: 1; display: flex; flex-direction: column; gap: 1px; overflow: hidden; min-width: 0; }
+    .p-pair-a { font-size: 0.82rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #9898a8; }
+    .p-pair-b { font-size: 0.74rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #5a5a6e; }
+    .p-slot.winner .p-pair-a { color: var(--gold-soft); }
+    .p-slot.winner .p-pair-b { color: rgba(240,165,0,.5); }
+    .p-slot.loser  .p-pair-a, .p-slot.loser .p-pair-b { color: #28282f; }
+
+    .round-lbl {
+      position: absolute; font-size: 0.62rem; font-weight: 700;
+      letter-spacing: .15em; text-transform: uppercase;
+      color: var(--subtle); text-align: center; transition: color .3s;
+    }
+    .round-lbl.cur-w { color: rgba(240,165,0,.7); }
+    .round-lbl.cur-l { color: rgba(255,123,114,.7); }
+
+    /* 敗者ブラケット 未準備 */
+    .losers-pending {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      height: 300px; gap: 12px; color: var(--muted);
+    }
+    .losers-pending-icon { font-size: 2.5rem; opacity: .4; }
+    .losers-pending p { font-size: 0.84rem; text-align: center; line-height: 1.7; }
+
+    /* ━━━━ WINNER ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+    /* オーバーレイ: ブラケットの上に重ねて表示 */
+    #winner-wrap {
+      display: none;
+      position: fixed; inset: 0; z-index: 100;
+      background: rgba(8,8,12,.78);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      overflow-y: auto;
+      padding: 32px 20px 48px;
+      animation: fadeInBg .35s ease both;
+    }
+    @keyframes fadeInBg {
+      from { opacity: 0; } to { opacity: 1; }
+    }
+    .winner-box {
+      max-width: 420px; margin: 60px auto 0;
+      background: var(--bg-card); border: 1px solid #2c220a;
+      border-radius: 24px; padding: 48px 36px 40px;
+      text-align: center; position: relative; overflow: hidden;
+      animation: riseIn .5s cubic-bezier(.22,1,.36,1) both;
+    }
+    .winner-box::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 50% -10%,rgba(240,165,0,.22) 0%,transparent 60%);
       pointer-events: none;
     }
-    .bye-auto.doubles-card { width: 210px; }
-    .bye-auto-name {
-      flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-      color: #38384a; font-size: 0.78rem;
+    .winner-box::after {
+      content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+      width: 60%; height: 1px;
+      background: linear-gradient(90deg,transparent,var(--gold),transparent);
     }
-    .bye-auto-tag {
-      font-size: 0.5rem; color: #252530;
-      letter-spacing: .04em; flex-shrink: 0;
+    @keyframes riseIn {
+      from { opacity: 0; transform: translateY(28px) scale(.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
     }
+    .w-trophy { font-size: 3.8rem; display: block; margin-bottom: 18px; filter: drop-shadow(0 0 30px rgba(240,165,0,.7)); animation: floatIcon 3s ease-in-out infinite; }
+    .w-eyebrow { font-size: 0.65rem; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; color: var(--gold); margin-bottom: 10px; }
+    .w-name { font-size: 2.2rem; font-weight: 900; letter-spacing: -.04em; color: var(--text); line-height: 1.15; }
+    .w-name.d { font-size: 1.8rem; }
+    .w-pair-a { display: block; }
+    .w-pair-b { display: block; color: var(--gold-soft); font-size: .8em; margin-top: 4px; }
+    .w-sub { color: var(--muted); font-size: 0.82rem; margin-top: 10px; }
+    /* ボタン横並び */
+    .winner-btns { display: flex; gap: 12px; justify-content: center; margin-top: 28px; flex-wrap: wrap; }
+    .btn-restart, .btn-see-bracket {
+      display: inline-block; background: transparent; border: 1px solid var(--border);
+      color: var(--muted); padding: 11px 22px; border-radius: 10px;
+      font-family: inherit; font-weight: 600; font-size: 0.84rem;
+      cursor: pointer; transition: all .18s;
+    }
+    .btn-restart:hover    { border-color: var(--gold); color: var(--gold); }
+    .btn-see-bracket      { border-color: #3a3a4a; color: #9898a8; }
+    .btn-see-bracket:hover { border-color: #6a6a8a; color: var(--text); }
 
-    /* Bracket lines via canvas */
-    #lines-canvas { position: absolute; top: 0; left: 0; pointer-events: none; }
+    /* Bye auto-label */
+    .bye-auto { position: absolute; width: 200px; display: flex; align-items: center; gap: 8px; padding: 4px 12px; pointer-events: none; }
+    .bye-auto.d  { width: 220px; }
+    .bye-auto-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #38384a; font-size: 0.78rem; }
+    .bye-auto-tag  { font-size: 0.5rem; color: #252530; letter-spacing: .04em; flex-shrink: 0; }
+
+    #canvas-w, #canvas-l { position: absolute; top: 0; left: 0; pointer-events: none; }
+
+    /* ━━━━ RESPONSIVE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+    @media (min-width: 601px) and (max-width: 1024px) {
+      .setup-panel { max-width: 560px; }
+      .bracket-wrap { padding: 28px 20px; }
+    }
+    @media (max-height: 600px) and (orientation: landscape) {
+      #setup { justify-content: flex-start; padding-top: 28px; }
+      .hero  { margin-bottom: 24px; }
+      .hero-title { font-size: 2.4rem; }
+    }
+    @media (max-width: 600px) {
+      .hero-title { font-size: 2.2rem; }
+      .setup-panel { padding: 24px 18px; }
+      .bracket-wrap { padding: 20px 12px; }
+      .nav { padding: 10px 14px; gap: 8px; }
+      .w-name { font-size: 1.8rem; }
+      .winner-box { padding: 36px 22px 32px; }
+      .tab-btn { padding: 6px 10px; font-size: 0.72rem; }
+    }
   </style>
 </head>
 <body>
@@ -620,7 +393,6 @@
   </div>
 
   <div class="setup-panel">
-    <!-- モード切替 -->
     <div class="mode-toggle">
       <button class="mode-btn active" id="btn-singles" onclick="setMode(false)">🎾 シングルス</button>
       <button class="mode-btn" id="btn-doubles" onclick="setMode(true)">👥 ダブルス</button>
@@ -635,14 +407,16 @@
     <label class="lbl" id="lbl-names">参加者名</label>
     <div class="names-scroll" id="names-list"></div>
 
-    <!-- ダブルス: ランダムペア作成ボタン -->
-    <button class="btn-randomize" id="btn-randomize" style="display:none" onclick="randomizePairs()">
-      🎲 ランダムでペアを作る
-    </button>
+    <!-- 奇数時: 不戦勝選手セレクター -->
+    <div class="bye-section" id="bye-section">
+      <label class="lbl">🎫 不戦勝選手（1名が第1ラウンド免除）</label>
+      <select class="bye-select" id="bye-select"></select>
+    </div>
 
-    <!-- ダブルス: ペアプレビュー -->
+    <!-- ダブルス: ランダムペア作成 -->
+    <button class="btn-randomize" id="btn-randomize" onclick="randomizePairs()">🎲 ランダムでペアを作る</button>
     <div class="pairs-preview" id="pairs-preview">
-      <div class="pairs-preview-header">ペア確認 — もう一度押すと再シャッフル</div>
+      <div class="pairs-preview-hdr">ペア確認 — 再度タップで再シャッフル 🔀</div>
     </div>
 
     <button class="btn btn-start" id="btn-start" onclick="startTournament()">トーナメント開始 →</button>
@@ -652,119 +426,147 @@
 <!-- ── TOURNAMENT ─────────────────────────────── -->
 <div id="tournament">
   <div class="nav">
-    <span class="nav-title">🏆 <b id="nav-mode-label">TOURNAMENT</b></span>
-    <button class="btn btn-ghost" style="padding:8px 14px;font-size:.8rem;" onclick="backToSetup()">← やり直す</button>
-  </div>
-  <div class="bracket-wrap">
-    <div id="bracket-container">
-      <canvas id="lines-canvas"></canvas>
+    <button class="btn btn-ghost" style="padding:7px 12px;font-size:.78rem;flex-shrink:0;" onclick="backToSetup()">← やり直す</button>
+    <span class="nav-brand" id="nav-brand">🏆 <b>TOURNAMENT</b></span>
+    <div class="tab-group">
+      <button class="tab-btn active-w" id="tab-w" onclick="showTab('w')">🏆 勝者</button>
+      <button class="tab-btn" id="tab-l" onclick="showTab('l')">💔 敗者 <span class="tab-badge" id="tab-badge">-</span></button>
     </div>
   </div>
+
+  <div class="bracket-wrap">
+    <!-- 勝者ブラケット -->
+    <div class="bracket-area visible" id="area-w">
+      <div id="bracket-w"><canvas id="canvas-w"></canvas></div>
+    </div>
+    <!-- 敗者ブラケット -->
+    <div class="bracket-area" id="area-l">
+      <div id="bracket-l"><canvas id="canvas-l"></canvas></div>
+      <div class="losers-pending" id="losers-pending">
+        <span class="losers-pending-icon">⏳</span>
+        <p>勝者ブラケットの第1ラウンドが<br>終わると敗者ブラケットが作られます</p>
+      </div>
+    </div>
+  </div>
+
   <div id="winner-wrap">
     <div class="winner-box">
       <span class="w-trophy">🏆</span>
-      <p class="w-eyebrow">Champion</p>
+      <p class="w-eyebrow" id="w-eyebrow">Champion</p>
       <p class="w-name" id="w-name"></p>
       <p class="w-sub">おめでとうございます！</p>
-      <button class="btn-restart" onclick="backToSetup()">もう一度プレイ</button>
+      <div class="winner-btns">
+        <button class="btn-see-bracket" onclick="closeWinner()">📋 トーナメント表を見る</button>
+        <button class="btn-restart" onclick="backToSetup()">もう一度プレイ</button>
+      </div>
     </div>
   </div>
 </div>
 
 <script>
-// ── Constants ─────────────────────────────────────────────
-const BYE = { name: '—', isBye: true };
-
-const MATCH_W_SINGLES = 182;
-const MATCH_W_DOUBLES = 214;
-const ROUND_GAP = 56;
-const LABEL_H   = 26;
+// ── Constants ──────────────────────────────────────────────
+const BYE      = { name: '—', isBye: true };
+const MATCH_W  = 200;
+const MATCH_WD = 222; // doubles
+const ROUND_GAP = 58;
+const LABEL_H   = 28;
 
 // ── State ─────────────────────────────────────────────────
-let T            = null;
 let isDoubles    = false;
-let currentPairs = []; // [[nameA, nameB], ...]
+let currentPairs = [];
+let winners      = null; // { rounds }
+let losers       = null; // { rounds } or null
+let activeTab    = 'w';
+
+// ── Layout ────────────────────────────────────────────────
+function lp(N0) {
+  const mw   = isDoubles ? MATCH_WD : MATCH_W;
+  const slotH = Math.max(isDoubles ? 30 : 24, Math.min(isDoubles ? 50 : 42, Math.floor(400/N0)));
+  const matchH = slotH * 2 + 2;
+  const gap    = Math.max(6, Math.min(16, Math.floor(90/N0)));
+  return { slotH, matchH, gap, unit: matchH+gap, mw };
+}
 
 // ── Mode ──────────────────────────────────────────────────
-function setMode(doubles) {
-  isDoubles = doubles;
-
-  // ボタン見た目
-  document.getElementById('btn-singles').classList.toggle('active', !doubles);
-  document.getElementById('btn-doubles').classList.toggle('active',  doubles);
-  document.getElementById('btn-doubles').classList.toggle('doubles-active', doubles);
-
-  // ラベル/ヒーロー更新
-  document.getElementById('hero-sub').textContent  = doubles ? 'Doubles Elimination' : 'Single Elimination';
-  document.getElementById('hero-sub').classList.toggle('is-doubles', doubles);
-  document.getElementById('lbl-count').textContent = doubles ? '参加人数（偶数）' : '参加者数';
-  document.getElementById('lbl-names').textContent = doubles ? '参加者名（個人）' : '参加者名';
-  document.getElementById('btn-start').classList.toggle('doubles-mode', doubles);
-  document.getElementById('btn-start').textContent = doubles
-    ? 'ダブルストーナメント開始 →'
-    : 'トーナメント開始 →';
-
-  // ランダムペアボタン & プレビューの表示切替
-  document.getElementById('btn-randomize').style.display = doubles ? 'block' : 'none';
+function setMode(dbl) {
+  isDoubles = dbl;
+  document.getElementById('btn-singles').classList.toggle('active', !dbl);
+  document.getElementById('btn-doubles').classList.toggle('active',  dbl);
+  document.getElementById('btn-doubles').classList.toggle('d',       dbl);
+  document.getElementById('hero-sub').textContent = dbl ? 'Doubles Elimination' : 'Single Elimination';
+  document.getElementById('hero-sub').classList.toggle('is-doubles', dbl);
+  document.getElementById('lbl-count').textContent = dbl ? '参加人数（偶数）' : '参加者数';
+  document.getElementById('lbl-names').textContent = dbl ? '参加者名（個人）' : '参加者名';
+  document.getElementById('btn-start').classList.toggle('d', dbl);
+  document.getElementById('btn-start').textContent = dbl ? 'ダブルストーナメント開始 →' : 'トーナメント開始 →';
+  document.getElementById('btn-randomize').style.display = dbl ? 'block' : 'none';
   document.getElementById('pairs-preview').style.display = 'none';
   currentPairs = [];
-
   updateInputs();
 }
 
 // ── Setup ─────────────────────────────────────────────────
-function layoutParams(N0) {
-  const MATCH_W = isDoubles ? MATCH_W_DOUBLES : MATCH_W_SINGLES;
-  const slotH   = Math.max(isDoubles ? 28 : 22, Math.min(isDoubles ? 48 : 40, Math.floor(360 / N0)));
-  const matchH  = slotH * 2 + 2;
-  const gap     = Math.max(6, Math.min(14, Math.floor(80 / N0)));
-  return { slotH, matchH, gap, unit: matchH + gap, MATCH_W };
-}
-
 function updateInputs() {
   let n = Math.max(2, Math.min(32, +document.getElementById('num-p').value || 8));
-  // ダブルスは偶数に丸める
   if (isDoubles && n % 2 !== 0) n++;
   document.getElementById('num-p').value = n;
 
   const list = document.getElementById('names-list');
-  // 既存の値を保持
-  const prevS = [...list.querySelectorAll('.inp-s')].map(i => i.value);
+  const prev = [...list.querySelectorAll('.inp-s')].map(i => i.value);
   list.innerHTML = '';
 
-  // ダブルス・シングルスともに個人名入力（ダブルスはペア化をランダムで行う）
   for (let i = 0; i < n; i++) {
     const row = document.createElement('div');
     row.className = 'name-row';
     const ph = isDoubles ? `選手 ${i+1}` : `参加者 ${i+1}`;
-    row.innerHTML = `
-      <span class="name-idx">${i+1}</span>
-      <input type="text" class="input inp-s" placeholder="${ph}" value="${h(prevS[i]||'')}">`;
+    row.innerHTML = `<span class="name-idx">${i+1}</span>
+      <input type="text" class="input inp-s" placeholder="${ph}" value="${h(prev[i]||'')}"
+        oninput="refreshByeSelect()">`;
     list.appendChild(row);
   }
 
-  // 人数変更時はプレビューをリセット
+  // 奇数判定: ダブルスは偶数強制なので不要
+  const odd = !isDoubles && (n % 2 !== 0);
+  document.getElementById('bye-section').style.display = odd ? 'block' : 'none';
+  if (odd) buildByeSelect(n);
+
   document.getElementById('pairs-preview').style.display = 'none';
   currentPairs = [];
 }
 
-// ── ランダムペア作成 ────────────────────────────────────────
-function randomizePairs() {
+function buildByeSelect(n) {
+  const sel = document.getElementById('bye-select');
+  const prev = sel.value;
+  sel.innerHTML = '';
   const inputs = [...document.querySelectorAll('#names-list .inp-s')];
-  const names  = inputs.map((el, i) => el.value.trim() || `選手 ${i+1}`);
+  for (let i = 0; i < n; i++) {
+    const name = inputs[i]?.value.trim() || `参加者 ${i+1}`;
+    const opt  = document.createElement('option');
+    opt.value = i;
+    opt.textContent = `${i+1}. ${name}`;
+    sel.appendChild(opt);
+  }
+  // 前の選択を復元
+  if (prev !== '') sel.value = prev;
+}
 
-  // シャッフルしてペアに分割
+function refreshByeSelect() {
+  const n = +document.getElementById('num-p').value;
+  if (!isDoubles && n % 2 !== 0) buildByeSelect(n);
+}
+
+function randomizePairs() {
+  const inputs  = [...document.querySelectorAll('#names-list .inp-s')];
+  const names   = inputs.map((el, i) => el.value.trim() || `選手 ${i+1}`);
   const shuffled = [...names];
   shuffle(shuffled);
-  currentPairs = [];
-  for (let i = 0; i < shuffled.length; i += 2) {
-    currentPairs.push([shuffled[i], shuffled[i+1] || `選手 ${i+2}`]);
-  }
 
-  // プレビュー表示
+  currentPairs = [];
+  for (let i = 0; i < shuffled.length; i += 2)
+    currentPairs.push([shuffled[i], shuffled[i+1] || `選手 ${i+2}`]);
+
   const preview = document.getElementById('pairs-preview');
-  // ヘッダー以外を削除してから再描画
-  preview.innerHTML = '<div class="pairs-preview-header">ペア確認 — もう一度押すと再シャッフル 🔀</div>';
+  preview.innerHTML = '<div class="pairs-preview-hdr">ペア確認 — 再度タップで再シャッフル 🔀</div>';
   currentPairs.forEach(([a, b], i) => {
     const row = document.createElement('div');
     row.className = 'pair-row';
@@ -777,9 +579,7 @@ function randomizePairs() {
 
 function startTournament() {
   let players;
-
   if (isDoubles) {
-    // ペアが未作成なら自動でランダム化
     if (currentPairs.length === 0) randomizePairs();
     players = currentPairs.map(([a, b], i) => ({
       name: `${a} / ${b}`, pairA: a, pairB: b, id: i, isTeam: true
@@ -789,29 +589,42 @@ function startTournament() {
     players = inputs.map((el, i) => ({ name: el.value.trim() || `参加者 ${i+1}`, id: i }));
   }
 
+  const byeIdx = (!isDoubles && players.length % 2 !== 0)
+    ? +document.getElementById('bye-select').value
+    : -1;
+
   shuffle(players);
-  initTournament(players);
 
-  // ナビラベル
-  document.getElementById('nav-mode-label').textContent = isDoubles ? 'DOUBLES' : 'TOURNAMENT';
-  document.getElementById('nav-mode-label').classList.toggle('doubles', isDoubles);
+  // 不戦勝選手を先頭に移動
+  if (byeIdx >= 0) {
+    // シャッフル後は元のidで探す
+    const idx = players.findIndex(p => p.id === byeIdx);
+    if (idx > 0) { const t = players[0]; players[0] = players[idx]; players[idx] = t; }
+  }
 
+  initBracket(players, 'winners');
+  losers = null;
+  updateLosersTab();
+
+  const brand = document.getElementById('nav-brand');
+  brand.innerHTML = `🏆 <b${isDoubles?' class="d"':''}>TOURNAMENT</b>`;
+
+  showTab('w');
   document.getElementById('setup').style.display      = 'none';
   document.getElementById('winner-wrap').style.display = 'none';
   document.getElementById('tournament').style.display  = 'flex';
-  render();
+  renderAll();
 }
 
 function backToSetup() {
   document.getElementById('tournament').style.display = 'none';
   document.getElementById('setup').style.display = 'flex';
-  // ダブルスのペアプレビューをリセット
   currentPairs = [];
   document.getElementById('pairs-preview').style.display = 'none';
 }
 
-// ── Tournament logic ──────────────────────────────────────
-function initTournament(players) {
+// ── Bracket logic ─────────────────────────────────────────
+function initBracket(players, target) {
   let size = 1;
   while (size < players.length) size <<= 1;
   const numByes = size - players.length;
@@ -825,72 +638,166 @@ function initTournament(players) {
   while (cur.length >= 2) {
     const rd = [];
     for (let i = 0; i < cur.length; i += 2)
-      rd.push({ p1: cur[i], p2: cur[i+1], winner: null });
+      rd.push({ p1: cur[i], p2: cur[i+1], winner: null, s1: '', s2: '' });
     rounds.push(rd);
     cur = new Array(cur.length >> 1).fill(null);
   }
-  T = { rounds };
-  autoByes();
+
+  if (target === 'winners') winners = { rounds };
+  else                       losers  = { rounds };
+
+  autoByes(target === 'winners' ? winners.rounds : losers.rounds);
 }
 
-function autoByes() {
+function autoByes(rounds) {
   let changed = true;
   while (changed) {
     changed = false;
-    T.rounds.forEach((rd, ri) => {
+    rounds.forEach((rd, ri) => {
       rd.forEach((m, mi) => {
         if (m.winner !== null) return;
-        const b1 = m.p1 === BYE;
-        const b2 = m.p2 === BYE;
-        const r1 = m.p1 && !m.p1.isBye;
-        const r2 = m.p2 && !m.p2.isBye;
-        if (b1 && b2)      { adv(ri, mi, BYE);   changed = true; }
-        else if (b1 && r2) { adv(ri, mi, m.p2); changed = true; }
-        else if (r1 && b2) { adv(ri, mi, m.p1); changed = true; }
+        const b1 = m.p1 === BYE, b2 = m.p2 === BYE;
+        const r1 = m.p1 && !m.p1.isBye, r2 = m.p2 && !m.p2.isBye;
+        if (b1 && b2)      { adv(rounds, ri, mi, BYE);   changed = true; }
+        else if (b1 && r2) { adv(rounds, ri, mi, m.p2); changed = true; }
+        else if (r1 && b2) { adv(rounds, ri, mi, m.p1); changed = true; }
       });
     });
   }
 }
 
-function adv(ri, mi, player) {
-  T.rounds[ri][mi].winner = player;
-  if (ri + 1 < T.rounds.length) {
-    const nm = T.rounds[ri+1][mi>>1];
+function adv(rounds, ri, mi, player) {
+  rounds[ri][mi].winner = player;
+  if (ri + 1 < rounds.length) {
+    const nm = rounds[ri+1][mi>>1];
     if (mi % 2 === 0) nm.p1 = player; else nm.p2 = player;
   }
 }
 
-function pick(ri, mi, player) {
-  const m = T.rounds[ri][mi];
+function pick(rounds, ri, mi, player, bracketId) {
+  const m = rounds[ri][mi];
   if (m.winner || !player || player.isBye) return;
-  adv(ri, mi, player);
-  autoByes();
-  render();
-  checkWinner();
+  adv(rounds, ri, mi, player);
+  autoByes(rounds);
+  if (bracketId === 'w') tryBuildLosers();
+  renderAll();
+  checkWinner(bracketId);
 }
 
-function checkWinner() {
-  const last = T.rounds[T.rounds.length - 1][0];
-  if (last.winner && !last.winner.isBye) {
-    const wName  = document.getElementById('w-name');
-    if (last.winner.isTeam) {
-      wName.className = 'w-name doubles-winner';
-      wName.innerHTML = `<span class="w-pair-a">🤝 ${h(last.winner.pairA)}</span><span class="w-pair-b">${h(last.winner.pairB)}</span>`;
-    } else {
-      wName.className = 'w-name';
-      wName.textContent = last.winner.name;
+// ── スコア入力 ────────────────────────────────────────────
+function storeScore(bracketId, ri, mi, slot, val) {
+  const rounds = bracketId === 'w' ? winners.rounds : losers.rounds;
+  const m = rounds[ri][mi];
+  if (slot === 1) m.s1 = val; else m.s2 = val;
+
+  // 両方入力済 & 異なる → 自動勝者選択
+  const s1 = parseFloat(m.s1), s2 = parseFloat(m.s2);
+  if (!isNaN(s1) && !isNaN(s2) && s1 !== s2 && !m.winner) {
+    const w = s1 > s2 ? m.p1 : m.p2;
+    const bothReal = m.p1 && !m.p1.isBye && m.p2 && !m.p2.isBye;
+    if (w && !w.isBye && bothReal) {
+      pick(rounds, ri, mi, w, bracketId);
+      return;
     }
-    document.getElementById('winner-wrap').style.display = 'block';
+  }
+  // スコアはm.s1/s2に保持済み。入力中に再描画するとフォーカスが外れるため再描画しない。
+  // 自動勝者選択(上のpick)時のみ再描画される。
+}
+
+// ── 敗者ブラケット構築 ────────────────────────────────────
+function tryBuildLosers() {
+  if (!winners) return;
+  const r0 = winners.rounds[0];
+  // 第1ラウンドが全試合終了しているか
+  const allDone = r0.every(m => m.winner !== null);
+  if (!allDone) return;
+  if (losers) return; // 既に構築済み
+
+  // 敗者を試合順に収集（ランダムでなく順番固定）
+  const losersArr = [];
+  r0.forEach(m => {
+    if (m.winner && !m.winner.isBye) {
+      const loser = m.p1 === m.winner ? m.p2 : m.p1;
+      if (loser && !loser.isBye) losersArr.push(loser);
+    }
+  });
+
+  if (losersArr.length < 2) return;
+  initBracket(losersArr, 'losers');
+  updateLosersTab();
+}
+
+function updateLosersTab() {
+  const badge = document.getElementById('tab-badge');
+  if (losers) {
+    badge.textContent = '準備OK';
+    badge.style.background = 'rgba(255,123,114,.25)';
+    badge.style.color = 'var(--loss)';
+  } else {
+    badge.textContent = '準備中';
+    badge.style.background = '';
+    badge.style.color = '';
   }
 }
 
+// ── 優勝確認 ─────────────────────────────────────────────
+function checkWinner(bracketId) {
+  const rounds = bracketId === 'w' ? winners?.rounds : losers?.rounds;
+  if (!rounds) return;
+  const last = rounds[rounds.length - 1][0];
+  if (!last.winner || last.winner.isBye) return;
+
+  const eyebrow = bracketId === 'w' ? '🏆 Champion' : '🥉 3rd Place Champion';
+  document.getElementById('w-eyebrow').textContent = eyebrow;
+
+  const wName = document.getElementById('w-name');
+  if (last.winner.isTeam) {
+    wName.className = 'w-name d';
+    wName.innerHTML = `<span class="w-pair-a">🤝 ${h(last.winner.pairA)}</span><span class="w-pair-b">${h(last.winner.pairB)}</span>`;
+  } else {
+    wName.className = 'w-name';
+    wName.textContent = last.winner.name;
+  }
+  const wrap = document.getElementById('winner-wrap');
+  wrap.style.display = 'flex';
+  wrap.style.alignItems = 'flex-start';
+  wrap.style.justifyContent = 'center';
+}
+
+function closeWinner() {
+  document.getElementById('winner-wrap').style.display = 'none';
+}
+
+// ── Tab ──────────────────────────────────────────────────
+function showTab(tab) {
+  activeTab = tab;
+  document.getElementById('area-w').classList.toggle('visible', tab === 'w');
+  document.getElementById('area-l').classList.toggle('visible', tab === 'l');
+  document.getElementById('tab-w').className = 'tab-btn' + (tab === 'w' ? ' active-w' : '');
+  document.getElementById('tab-l').className = 'tab-btn' + (tab === 'l' ? ' active-l' : '');
+
+  // 敗者ブラケットペンディング表示切替
+  const pending = document.getElementById('losers-pending');
+  if (pending) pending.style.display = losers ? 'none' : 'flex';
+
+  if (tab === 'l' && losers) renderBracket('l');
+}
+
 // ── Rendering ─────────────────────────────────────────────
+function renderAll() {
+  renderBracket('w');
+  if (losers && activeTab === 'l') renderBracket('l');
+  updateLosersTab();
+  const pending = document.getElementById('losers-pending');
+  if (pending) pending.style.display = losers ? 'none' : 'flex';
+}
+
 function rdLabel(ri, total) {
   const e = total - 1 - ri;
   if (e === 0) return '決勝';
   if (e === 1) return '準決勝';
   if (e === 2) return '準々決勝';
-  return `ROUND ${ri + 1}`;
+  return `ROUND ${ri+1}`;
 }
 
 function cy(ri, mi, unit, gap) {
@@ -900,21 +807,33 @@ function cy(ri, mi, unit, gap) {
   return (t + b) / 2;
 }
 
-function render() {
-  const cont = document.getElementById('bracket-container');
+function renderBracket(bracketId) {
+  const rounds   = bracketId === 'w' ? winners?.rounds : losers?.rounds;
+  if (!rounds) return;
+
+  const cont   = document.getElementById(bracketId === 'w' ? 'bracket-w' : 'bracket-l');
+  const cvId   = bracketId === 'w' ? 'canvas-w' : 'canvas-l';
+  const isLoss = bracketId === 'l';
+
   cont.querySelectorAll('.match-card,.round-lbl,.bye-auto').forEach(e => e.remove());
 
-  const R  = T.rounds.length;
-  const N0 = T.rounds[0].length;
-  const { matchH, gap, unit, MATCH_W } = layoutParams(N0);
+  const R  = rounds.length;
+  const N0 = rounds[0].length;
+  const { matchH, gap, unit, mw } = lp(N0);
 
   const totalH = N0 * unit - gap + LABEL_H;
-  const totalW = R * (MATCH_W + ROUND_GAP) - ROUND_GAP;
+  const totalW = R * (mw + ROUND_GAP) - ROUND_GAP;
 
   cont.style.height = totalH + 'px';
   cont.style.width  = totalW + 'px';
 
-  const cv  = document.getElementById('lines-canvas');
+  let cv = document.getElementById(cvId);
+  if (!cv) {
+    cv = document.createElement('canvas');
+    cv.id = cvId;
+    cv.style.cssText = 'position:absolute;top:0;left:0;pointer-events:none;';
+    cont.insertBefore(cv, cont.firstChild);
+  }
   const dpr = window.devicePixelRatio || 1;
   cv.width  = totalW * dpr;
   cv.height = totalH * dpr;
@@ -924,121 +843,147 @@ function render() {
   ctx.scale(dpr, dpr);
   ctx.clearRect(0, 0, totalW, totalH);
 
-  const activeRound = T.rounds.findIndex(rd =>
+  const lineActive = isLoss ? 'rgba(255,123,114,.35)' : 'rgba(240,165,0,.35)';
+  const lineDim    = 'rgba(30,30,46,.95)';
+
+  const activeRound = rounds.findIndex(rd =>
     rd.some(m => !m.winner && m.p1 && !m.p1.isBye && m.p2 && !m.p2.isBye)
   );
 
-  T.rounds.forEach((rd, ri) => {
-    const x = ri * (MATCH_W + ROUND_GAP);
+  rounds.forEach((rd, ri) => {
+    const x = ri * (mw + ROUND_GAP);
 
     const lbl = document.createElement('div');
-    lbl.className = 'round-lbl' + (ri === activeRound ? ' current' : '');
-    lbl.style.cssText = `left:${x}px;top:0;width:${MATCH_W}px;`;
+    lbl.className = 'round-lbl' + (ri === activeRound ? (isLoss ? ' cur-l' : ' cur-w') : '');
+    lbl.style.cssText = `left:${x}px;top:0;width:${mw}px;`;
     lbl.textContent = rdLabel(ri, R);
     cont.appendChild(lbl);
 
     rd.forEach((m, mi) => {
       const centerY = cy(ri, mi, unit, gap);
       const topY    = centerY - matchH / 2;
-      const isByeMatch = ri === 0 && (m.p1 === BYE || m.p2 === BYE);
+      const isBye   = ri === 0 && (m.p1 === BYE || m.p2 === BYE);
 
-      if (isByeMatch) {
+      if (isBye) {
         const winner = m.p1 === BYE ? m.p2 : m.p1;
         if (winner && !winner.isBye) {
           const el = document.createElement('div');
-          el.className = 'bye-auto' + (isDoubles ? ' doubles-card' : '');
-          el.style.cssText = `left:${x}px;top:${centerY - 14}px;`;
+          el.className = 'bye-auto' + (isDoubles ? ' d' : '');
+          el.style.cssText = `left:${x}px;top:${centerY-14}px;`;
           el.innerHTML = `<span class="bye-auto-name">${h(winner.name)}</span><span class="bye-auto-tag">不戦勝</span>`;
           cont.appendChild(el);
         }
       } else {
         const bothReal = m.p1 && !m.p1.isBye && m.p2 && !m.p2.isBye;
+        const activeClass = m.winner ? 'done' : bothReal ? (isLoss ? 'active-l' : 'active-w') : '';
         const card = document.createElement('div');
-        card.className = 'match-card' + (isDoubles ? ' doubles-card' : '') + ' ' +
-                         (m.winner ? 'done' : bothReal ? 'active' : '');
+        card.className = `match-card${isDoubles ? ' doubles-card' : ''} ${activeClass}`;
         card.style.cssText = `left:${x}px;top:${topY}px;`;
-        card.appendChild(slot(m.p1, m, ri, mi, matchH));
-        card.appendChild(slot(m.p2, m, ri, mi, matchH));
+        card.appendChild(makeSlot(m.p1, m, ri, mi, matchH, bracketId, isLoss));
+        card.appendChild(makeSlot(m.p2, m, ri, mi, matchH, bracketId, isLoss));
         cont.appendChild(card);
       }
 
-      // コネクターライン
+      // ライン
       if (ri < R - 1) {
-        const x1   = x + MATCH_W;
+        const x1   = x + mw;
         const midX = x1 + ROUND_GAP / 2;
-        const nextY = cy(ri + 1, mi >> 1, unit, gap);
-        const isAuto    = m.p1 === BYE || m.p2 === BYE;
-        const hasRealWin = !!m.winner && !m.winner.isBye;
-        const lc = hasRealWin && !isAuto ? 'rgba(240,165,0,.35)' : 'rgba(30,30,46,.95)';
-
-        line(ctx, x1, centerY, midX, centerY, lc);
+        const ny   = cy(ri+1, mi>>1, unit, gap);
+        const isAuto = m.p1 === BYE || m.p2 === BYE;
+        const lc = m.winner && !m.winner.isBye && !isAuto ? lineActive : lineDim;
+        drawLine(ctx, x1, centerY, midX, centerY, lc);
         if (mi % 2 === 0) {
-          const sibY = mi + 1 < rd.length ? cy(ri, mi + 1, unit, gap) : centerY;
-          line(ctx, midX, centerY, midX, sibY, lc);
-          line(ctx, midX, nextY, x + MATCH_W + ROUND_GAP, nextY, lc);
+          const sibY = mi+1 < rd.length ? cy(ri, mi+1, unit, gap) : centerY;
+          drawLine(ctx, midX, centerY, midX, sibY, lc);
+          drawLine(ctx, midX, ny, x + mw + ROUND_GAP, ny, lc);
         }
       }
     });
   });
 }
 
-function slot(player, m, ri, mi, matchH) {
-  const el = document.createElement('div');
-  const slotH = Math.floor((matchH - 2) / 2);
+function makeSlot(player, m, ri, mi, matchH, bracketId, isLoss) {
+  const el     = document.createElement('div');
+  const slotH  = Math.floor((matchH - 2) / 2);
+  const real   = player && !player.isBye;
+  const both   = m.p1 && !m.p1.isBye && m.p2 && !m.p2.isBye;
+  const slot1  = player === m.p1; // 上スロットか
+  const scoreVal = slot1 ? m.s1 : m.s2;
+  const scoreSlotNum = slot1 ? 1 : 2;
 
-  const real     = player && !player.isBye;
-  const bothReal = m.p1 && !m.p1.isBye && m.p2 && !m.p2.isBye;
+  el.className = 'p-slot' + (isLoss ? ' loss-bracket' : '');
+  el.style.minHeight = slotH + 'px';
 
-  if (isDoubles && real) {
-    // ダブルス: ペアを2行表示
-    el.className = 'p-slot doubles-slot';
-    el.style.minHeight = slotH + 'px';
+  if (!real) {
+    el.classList.add('empty');
+    el.innerHTML = '<span class="p-name">—</span>';
+    return el;
+  }
 
-    const isWinner = m.winner === player;
-    const isLoser  = m.winner && m.winner !== player;
+  const isWinner = m.winner === player;
+  const isLoser  = m.winner && m.winner !== player;
 
-    if (isWinner) el.classList.add('winner');
-    else if (isLoser) el.classList.add('loser');
-    else if (bothReal) {
-      el.classList.add('clickable');
-      el.title = `${player.name} を勝者に選択`;
-      el.addEventListener('click', () => pick(ri, mi, player));
-    }
+  if (isWinner)       el.classList.add('winner');
+  else if (isLoser)   el.classList.add('loser');
+  else if (both) {
+    el.classList.add('clickable');
+    el.title = `${player.name} を勝者に選択`;
+    el.addEventListener('click', () => pick(
+      bracketId === 'w' ? winners.rounds : losers.rounds,
+      ri, mi, player, bracketId
+    ));
+  }
 
-    const crown = isWinner ? '<span class="p-crown">★</span>' : '';
+  const crown = isWinner ? '<span class="p-crown">★</span>' : '';
+
+  if (isDoubles && player.isTeam) {
+    // ダブルス: 2行表示
+    const scoreEl = makeScoreEl(m, ri, mi, scoreSlotNum, scoreVal, bracketId, isWinner, isLoser);
     el.innerHTML = `
       <div class="p-pair">
-        <span class="p-pair-a">${h(player.pairA || player.name)}</span>
-        <span class="p-pair-b">${player.pairB ? h(player.pairB) : ''}</span>
+        <span class="p-pair-a">${h(player.pairA)}</span>
+        <span class="p-pair-b">${h(player.pairB)}</span>
       </div>${crown}`;
+    el.appendChild(scoreEl);
   } else {
-    // シングルス（従来通り）
-    el.className = 'p-slot';
-    el.style.minHeight = slotH + 'px';
-    el.style.fontSize  = slotH < 28 ? '0.75rem' : '0.87rem';
-
-    if (!real) {
-      el.classList.add('empty');
-      el.innerHTML = '<span class="p-name">—</span>';
-    } else if (m.winner === player) {
-      el.classList.add('winner');
-      el.innerHTML = `<span class="p-name">${h(player.name)}</span><span class="p-crown">★</span>`;
-    } else if (m.winner) {
-      el.classList.add('loser');
-      el.innerHTML = `<span class="p-name">${h(player.name)}</span>`;
-    } else {
-      if (bothReal) {
-        el.classList.add('clickable');
-        el.title = `${player.name} を勝者に選択`;
-        el.addEventListener('click', () => pick(ri, mi, player));
-      }
-      el.innerHTML = `<span class="p-name">${h(player.name)}</span>`;
-    }
+    // シングルス
+    const scoreEl = makeScoreEl(m, ri, mi, scoreSlotNum, scoreVal, bracketId, isWinner, isLoser);
+    el.style.fontSize = slotH < 28 ? '0.76rem' : '0.86rem';
+    el.innerHTML = `<span class="p-name">${h(player.name)}</span>${crown}`;
+    el.appendChild(scoreEl);
   }
   return el;
 }
 
-function line(ctx, x1, y1, x2, y2, color) {
+function makeScoreEl(m, ri, mi, slotNum, val, bracketId, isWinner, isLoser) {
+  if (isWinner || isLoser) {
+    // 完了試合: バッジ表示
+    const span = document.createElement('span');
+    span.className = 'score-badge';
+    span.textContent = val !== '' ? val : '';
+    return span;
+  }
+  // 進行中: 入力欄
+  const inp = document.createElement('input');
+  inp.type      = 'number';
+  inp.className = 'score-input';
+  inp.min       = 0; inp.max = 99;
+  inp.value     = val !== '' ? val : '';
+  inp.placeholder = '-';
+  // 伝播を止めて親スロットのclick(勝者選択)が誤発火しないようにする
+  const stopAll = e => e.stopPropagation();
+  inp.addEventListener('mousedown',  stopAll);
+  inp.addEventListener('click',      stopAll);
+  inp.addEventListener('touchstart', stopAll, { passive: true });
+  inp.addEventListener('touchend',   stopAll);
+  inp.addEventListener('input', e => {
+    e.stopPropagation();
+    storeScore(bracketId, ri, mi, slotNum, e.target.value);
+  });
+  return inp;
+}
+
+function drawLine(ctx, x1, y1, x2, y2, color) {
   ctx.beginPath();
   ctx.strokeStyle = color;
   ctx.lineWidth = 1.5;
@@ -1050,26 +995,20 @@ function line(ctx, x1, y1, x2, y2, color) {
 
 // ── Util ──────────────────────────────────────────────────
 function shuffle(a) {
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+  for (let i = a.length-1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i+1));
     [a[i], a[j]] = [a[j], a[i]];
   }
 }
-
 function h(s) {
-  return String(s)
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 // Init
 updateInputs();
 
-// Service Worker 登録（PWA）
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(() => {});
-  });
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 }
 </script>
 </body>
