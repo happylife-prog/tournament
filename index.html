@@ -802,12 +802,8 @@ function startTournament() {
   losers = null;
   thirdPlace = null;
   matchHistory = [];
-  // ダブルスは敗者トーナメント・3位決定戦なし
-  document.getElementById('tab-l').style.display = isDoubles ? 'none' : '';
-  if (!isDoubles) {
-    preInitLosers(); // 敗者ブラケットをTBDで先行構築
-    updateLosersTab();
-  }
+  preInitLosers(); // 敗者ブラケットをTBDで先行構築
+  updateLosersTab();
 
   const brand = document.getElementById('nav-brand');
   brand.innerHTML = `🏆 <b${isDoubles?' class="d"':''}>TOURNAMENT</b>`;
@@ -822,7 +818,6 @@ function startTournament() {
 function backToSetup() {
   document.getElementById('tournament').style.display = 'none';
   document.getElementById('setup').style.display = 'flex';
-  document.getElementById('tab-l').style.display = '';
   currentPairs = [];
   matchHistory = [];
   thirdPlace = null;
@@ -975,7 +970,7 @@ function rebuildLosersFromKnown(knownLosers) {
 
 // 敗者が出るたびに随時反映（全ラウンド対応）
 function tryBuildLosers() {
-  if (isDoubles || !winners) return;
+  if (!winners) return;
   const knownLosers = collectAllLosers(); // ← 全ラウンドから収集
   if (knownLosers.length === 0) return;
 
@@ -1028,7 +1023,6 @@ function collectSemiLosers() {
 
 // 3位決定戦データを更新
 function updateThirdPlace() {
-  if (isDoubles) { thirdPlace = null; render3rdPlace(); return; }
   const R = winners?.rounds?.length ?? 0;
   if (R < 2) { thirdPlace = null; render3rdPlace(); return; }
   const semiLosers = collectSemiLosers();
