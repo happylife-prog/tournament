@@ -869,62 +869,72 @@ function storeScore(bracketId, ri, mi, slot, val) {
 
 // ── 敗者ブラケット ────────────────────────────────────────
 
-// 勝者ブラケットR0の実試合数（bye除く）
-function countRealMatchesR0() {
+// 勝者ブラケットに参加する実プレイヤー数 - 1 = 敗者ブラケットの合計人数
+function countTotalExpectedLosers() {
   if (!winners) return 0;
-  return winners.rounds[0].filter(m => !(m.p1 === BYE || m.p2 === BYE) &&
-    !(m.p1?.isBye || m.p2?.isBye)).length;
+  let n = 0;
+  winners.rounds[0].forEach(m => {
+    if (m.p1 && !m.p1.isBye) n++;
+    if (m.p2 && !m.p2.isBye) n++;
+  });
+  return Math.max(0, n - 1); // 優勝者1名を除く全員が敗者ブラケットへ
 }
 
-// 現在判明している敗者リスト（順番固定）
-function collectKnownLosers() {
+// 勝者ブラケットの【全ラウンド】から敗者を収集
+function collectAllLosers() {
   if (!winners) return [];
-  return winners.rounds[0].reduce((arr, m) => {
-    if (m.winner && !m.winner.isBye && !m.winner.isTBD) {
-      const loser = m.p1 === m.winner ? m.p2 : m.p1;
-      if (loser && !loser.isBye && !loser.isTBD) arr.push(loser);
+  const arr = [];
+  for (const rd of winners.rounds) {
+    for (const m of rd) {
+      if (m.winner && !m.winner.isBye && !m.winner.isTBD) {
+        const loser = m.p1 === m.winner ? m.p2 : m.p1;
+        if (loser && !loser.isBye && !loser.isTBD) arr.push(loser);
+      }
     }
-    return arr;
-  }, []);
+  }
+  return arr;
 }
 
 // TBDスロットで敗者ブラケットを先行構築（トーナメント開始時に呼ぶ）
 function preInitLosers() {
-  const n = countRealMatchesR0();
+  const n = countTotalExpectedLosers();
   if (n < 2) return;
   const tbds = Array.from({ length: n }, () => ({ ...TBD }));
   initBracket(tbds, 'losers');
 }
 
-// 既知の敗者＋残りTBDでスロット配列を作りブラケットを再構築（共通処理）
+// 既知の敗者＋残りTBDでブラケットをゼロから再構築（共通処理）
 function rebuildLosersFromKnown(knownLosers) {
-  const total = countRealMatchesR0();
+  const total = countTotalExpectedLosers();
   if (total < 2) { losers = null; updateLosersTab(); return; }
   const slots = Array.from({ length: total }, (_, i) =>
     i < knownLosers.length ? knownLosers[i] : { ...TBD });
   initBracket(slots, 'losers');
 }
 
-// 敗者が出るたびに随時反映（試合未消化の間はゼロから再構築）
+// 敗者が出るたびに随時反映（全ラウンド対応）
 function tryBuildLosers() {
   if (!winners) return;
-  const knownLosers = collectKnownLosers();
+  const knownLosers = collectAllLosers(); // ← 全ラウンドから収集
   if (knownLosers.length === 0) return;
 
-  // 敗者ブラケットにまだ試合結果がない → ゼロから再構築（BYEズレバグを回避）
+  // 敗者ブラケットにまだ試合結果がない → ゼロから再構築
   const hasPlayed = losers?.rounds?.some(rd =>
     rd.some(m => m.winner && !m.winner.isBye && !m.winner.isTBD));
   if (!hasPlayed) {
     rebuildLosersFromKnown(knownLosers);
   } else {
-    // 既プレイ済みがある場合: TBDスロットだけ差し替え（BYEはスキップ）
+    // 既プレイ済みがある場合: TBDオブジェクトをin-placeで書き換え
+    // （参照共有のため上位ラウンドにも自動反映される）
     let li = 0;
     for (const m of losers.rounds[0]) {
-      if (m.p1?.isTBD && li < knownLosers.length) { m.p1 = knownLosers[li++]; }
-      else if (m.p1 && !m.p1.isTBD && !m.p1.isBye) { li++; }
-      if (m.p2?.isBye) continue; // BYEスロットはliに影響しない
-      if (m.p2?.isTBD && li < knownLosers.length) { m.p2 = knownLosers[li++]; }
-      else if (m.p2 && !m.p2.isTBD && !m.p2.isBye) { li++; }
+      if (m.p1?.isTBD && li < knownLosers.length) {
+        Object.assign(m.p1, knownLosers[li++], { isTBD: false });
+      } else if (m.p1 && !m.p1.isTBD && !m.p1.isBye) { li++; }
+      if (m.p2?.isBye) continue;
+      if (m.p2?.isTBD && li < knownLosers.length) {
+        Object.assign(m.p2, knownLosers[li++], { isTBD: false });
+      } else if (m.p2 && !m.p2.isTBD && !m.p2.isBye) { li++; }
     }
   }
   updateLosersTab();
@@ -932,7 +942,7 @@ function tryBuildLosers() {
 
 // 取り消し後の敗者ブラケット再構築
 function rebuildLosersAfterUndo() {
-  const knownLosers = collectKnownLosers();
+  const knownLosers = collectAllLosers();
   losers = null;
   rebuildLosersFromKnown(knownLosers);
 }
@@ -960,8 +970,8 @@ function undoPick(rounds, ri, mi, bracketId) {
   m.s1 = '';
   m.s2 = '';
 
-  // 勝者ブラケットR0の取り消しなら敗者ブラケットも再構築
-  if (bracketId === 'w' && ri === 0) rebuildLosersAfterUndo();
+  // 勝者ブラケットの取り消しなら敗者ブラケットも再構築（全ラウンド対応）
+  if (bracketId === 'w') rebuildLosersAfterUndo();
 
   renderAll();
   renderHistory();
@@ -970,8 +980,8 @@ function undoPick(rounds, ri, mi, bracketId) {
 function updateLosersTab() {
   const badge = document.getElementById('tab-badge');
   if (!winners) { badge.textContent = '準備中'; badge.style.background = ''; badge.style.color = ''; return; }
-  const known    = collectKnownLosers().length;
-  const expected = countRealMatchesR0();
+  const known    = collectAllLosers().length;
+  const expected = countTotalExpectedLosers();
   if (known === 0) {
     badge.textContent = '準備中';
     badge.style.background = ''; badge.style.color = '';
