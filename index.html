@@ -558,7 +558,7 @@
     <span class="nav-brand" id="nav-brand">🏆 <b>TOURNAMENT</b></span>
     <div class="tab-group">
       <button class="tab-btn active-w" id="tab-w" onclick="showTab('w')">🏆 トーナメント</button>
-      <button class="tab-btn" id="tab-l" onclick="showTab('l')">🥴 ビリ決定戦 <span class="tab-badge" id="tab-badge">準備中</span></button>
+      <button class="tab-btn" id="tab-l" onclick="showTab('l')">💗 敗者トーナメント <span class="tab-badge" id="tab-badge">準備中</span></button>
       <button class="tab-btn" id="tab-h" onclick="showTab('h')">📋 履歴</button>
     </div>
   </div>
@@ -581,7 +581,7 @@
       <div id="bracket-l"><canvas id="canvas-l"></canvas></div>
       <div class="losers-pending" id="losers-pending">
         <span class="losers-pending-icon">⏳</span>
-        <p>トーナメントで敗者が出次第<br>ビリ決定戦が始まります</p>
+        <p>トーナメントで敗者が出次第<br>敗者トーナメントが始まります</p>
       </div>
     </div>
     <!-- 履歴 -->
@@ -903,13 +903,10 @@ function storeScore(bracketId, ri, mi, slot, val) {
   const m = rounds[ri][mi];
   if (slot === 1) m.s1 = val; else m.s2 = val;
 
-  // 両方入力済 & 異なる → 自動選択
-  // ビリ決定戦: スコアが低い方（弱い方）が次へ進む / 通常: 高い方が勝ち
+  // 両方入力済 & 異なる → 自動選択（高スコアが勝ち）
   const s1 = parseFloat(m.s1), s2 = parseFloat(m.s2);
   if (!isNaN(s1) && !isNaN(s2) && s1 !== s2 && !m.winner) {
-    const w = bracketId === 'l'
-      ? (s1 < s2 ? m.p1 : m.p2)   // ビリ決定戦: 低スコア（弱い方）が進む
-      : (s1 > s2 ? m.p1 : m.p2);  // 通常: 高スコアが勝ち
+    const w = s1 > s2 ? m.p1 : m.p2;
     const bothReal = m.p1 && !m.p1.isBye && m.p2 && !m.p2.isBye;
     if (w && !w.isBye && bothReal) {
       pick(rounds, ri, mi, w, bracketId);
@@ -1060,6 +1057,7 @@ function pick3rd(player) {
   });
   render3rdPlace();
   renderHistory();
+  checkAllDone();
 }
 
 // 3位決定戦の取り消し
@@ -1211,23 +1209,34 @@ function updateLosersTab() {
   }
 }
 
-// ── 優勝確認 ─────────────────────────────────────────────
-function checkWinner(bracketId) {
-  const rounds = bracketId === 'w' ? winners?.rounds : losers?.rounds;
-  if (!rounds) return;
-  const last = rounds[rounds.length - 1][0];
-  if (!last.winner || last.winner.isBye) return;
+// ── 全トーナメント完了確認 ───────────────────────────────
+function checkWinner(bracketId) { checkAllDone(); }
 
-  const eyebrow = bracketId === 'w' ? '🏆 Champion' : '🥴 最下位（ビリ）';
-  document.getElementById('w-eyebrow').textContent = eyebrow;
+function checkAllDone() {
+  // ウィナーズブラケット完了チェック
+  if (!winners) return;
+  const wLast = winners.rounds[winners.rounds.length - 1][0];
+  if (!wLast.winner || wLast.winner.isBye) return;
+
+  // 敗者トーナメントが存在する場合は完了チェック
+  if (losers) {
+    const lLast = losers.rounds[losers.rounds.length - 1][0];
+    if (!lLast.winner || lLast.winner.isBye) return;
+  }
+
+  // 3位決定戦が存在する場合は完了チェック
+  if (thirdPlace && !thirdPlace.winner) return;
+
+  // すべて完了 → ポップアップ表示
+  document.getElementById('w-eyebrow').textContent = 'おめでとうございます！！';
 
   const wName = document.getElementById('w-name');
-  if (last.winner.isTeam) {
+  if (wLast.winner.isTeam) {
     wName.className = 'w-name d';
-    wName.innerHTML = `<span class="w-pair-a">🤝 ${h(last.winner.pairA)}</span><span class="w-pair-b">${h(last.winner.pairB)}</span>`;
+    wName.innerHTML = `<span class="w-pair-a">🤝 ${h(wLast.winner.pairA)}</span><span class="w-pair-b">${h(wLast.winner.pairB)}</span>`;
   } else {
     wName.className = 'w-name';
-    wName.textContent = last.winner.name;
+    wName.textContent = wLast.winner.name;
   }
   const wrap = document.getElementById('winner-wrap');
   wrap.style.display = 'flex';
@@ -1436,7 +1445,7 @@ function renderBracket(bracketId, overrideContId, overrideCvId) {
         if (isLoss && !m.winner && bothReal) {
           const hint = document.createElement('div');
           hint.className = 'biri-hint';
-          hint.textContent = '負けた人をタップ';
+          hint.textContent = '勝った人をタップ';
           card.appendChild(hint);
         }
         card.appendChild(makeSlot(m.p1, m, ri, mi, matchH, bracketId, isLoss));
@@ -1503,9 +1512,7 @@ function makeSlot(player, m, ri, mi, matchH, bracketId, isLoss) {
   else if (isLoser)   el.classList.add('loser');
   else if (both) {
     el.classList.add('clickable');
-    el.title = isLoss
-      ? `${player.name} が負けた（ビリ候補として次へ）`
-      : `${player.name} を勝者に選択`;
+    el.title = `${player.name} を勝者に選択`;
     el.addEventListener('click', () => {
       const rds = bracketId === 'w' ? winners.rounds : losers.rounds;
       const mm  = rds[ri][mi];
@@ -1527,10 +1534,7 @@ function makeSlot(player, m, ri, mi, matchH, bracketId, isLoss) {
     });
   }
 
-  // ビリ決定戦: 「進んだ」選手（弱い方）は💀、通常は★
-  const crown = isWinner
-    ? `<span class="p-crown">${isLoss ? '💀' : '★'}</span>`
-    : '';
+  const crown = isWinner ? '<span class="p-crown">★</span>' : '';
 
   if (isDoubles && player.isTeam) {
     // ダブルス: 2行表示
