@@ -980,7 +980,8 @@ function tryBuildLosers() {
 
   // 敗者ブラケットにまだ試合結果がない → ゼロから再構築
   const hasPlayed = losers?.rounds?.some(rd =>
-    rd.some(m => m.winner && !m.winner.isBye && !m.winner.isTBD));
+    rd.some(m => m.winner && !m.winner.isBye && !m.winner.isTBD
+      && m.p1 && !m.p1.isBye && m.p2 && !m.p2.isBye));
   if (!hasPlayed) {
     rebuildLosersFromKnown(knownLosers);
   } else {
@@ -1134,13 +1135,6 @@ function makeThirdPlaceSlot(player, m, slotNum) {
     el.classList.add('clickable');
     el.title = `${player.name} が3位（勝者）`;
     el.addEventListener('click', () => {
-      if (!thirdPlace.s1 && !thirdPlace.s2) {
-        const card = el.closest('.match-card');
-        if (card) card.querySelectorAll('.score-input').forEach(inp => {
-          if (!inp.value) { inp.focus(); inp.classList.add('score-required'); setTimeout(()=>inp.classList.remove('score-required'),1200); }
-        });
-        return;
-      }
       pick3rd(player);
     });
   }
