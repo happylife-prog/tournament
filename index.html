@@ -493,12 +493,12 @@
 
     <!-- 奇数時: 不戦勝選手 -->
     <div class="bye-section" id="bye-section">
-      <p class="lbl">🎫 シード選手（1名が第1ラウンド免除）</p>
+      <p class="lbl" id="bye-lbl">🎫 シード選手（1名が第1ラウンド免除）</p>
       <div class="bye-mode-toggle">
         <button class="bye-mode-btn active" id="bye-random-btn" onclick="setByeMode('random')">🎲 ランダム</button>
         <button class="bye-mode-btn"        id="bye-pick-btn"   onclick="setByeMode('pick')">👤 選手を指定</button>
       </div>
-      <p class="bye-random-note" id="bye-random-note">シャッフル後にランダムで1名がシードになります</p>
+      <p class="bye-random-note" id="bye-random-note">シャッフル後にランダムでシード選手が決まります</p>
       <select class="bye-select" id="bye-select" style="display:none;"></select>
     </div>
 
@@ -590,10 +590,11 @@ let matchHistory = []; // { time, bracketId, ri, mi, winner, loser, s1, s2 }
 // ── Layout ────────────────────────────────────────────────
 function lp(N0) {
   const mw   = isDoubles ? MATCH_WD : MATCH_W;
-  // 36px以上を保証（padding 8px×2 + フォント～20px = 実際の最小高さ）
-  const slotH = Math.max(isDoubles ? 34 : 36, Math.min(isDoubles ? 50 : 42, Math.floor(400/N0)));
+  // slotH: 実際の最小コンテンツ高(padding8×2+font≈19=35px)以上を保証
+  const slotH = Math.max(isDoubles ? 36 : 38, Math.min(isDoubles ? 52 : 50, Math.floor(460/N0)));
   const matchH = slotH * 2 + 2;
-  const gap    = Math.max(10, Math.min(24, Math.floor(120/N0)));
+  // gap: カード間の余白（最低16px確保）
+  const gap    = Math.max(16, Math.min(32, Math.floor(160/N0)));
   return { slotH, matchH, gap, unit: matchH+gap, mw };
 }
 
@@ -639,7 +640,24 @@ function updateInputs() {
   // 奇数のときだけbye-sectionを表示
   const odd = !isDoubles && (n % 2 !== 0);
   document.getElementById('bye-section').style.display = odd ? 'block' : 'none';
-  if (odd && byeMode === 'pick') buildByeSelect(n);
+  if (odd) {
+    // シード人数（numByes = 次の2のべき乗 - n）を計算して表示
+    let sz = 1; while (sz < n) sz <<= 1;
+    const nb = sz - n;
+    const byeLbl = document.getElementById('bye-lbl');
+    if (byeLbl) {
+      byeLbl.textContent = nb === 1
+        ? '🎫 シード選手（1名が第1ラウンド免除）'
+        : `🎫 シード選手（${nb}名が第1ラウンド免除）`;
+    }
+    const byeNote = document.getElementById('bye-random-note');
+    if (byeNote) {
+      byeNote.textContent = nb === 1
+        ? 'シャッフル後にランダムでシード選手が決まります'
+        : `シャッフル後にランダムで${nb}名がシードになります`;
+    }
+    if (byeMode === 'pick') buildByeSelect(n);
+  }
 
   document.getElementById('pairs-preview').style.display = 'none';
   currentPairs = [];
@@ -713,11 +731,16 @@ function startTournament() {
 
   shuffle(players);
 
-  // 奇数 & 指定モード: 選択した選手を先頭に移動して不戦勝にする
+  // 奇数 & 指定モード: 選択した選手をシードスロットに配置
   if (!isDoubles && players.length % 2 !== 0 && byeMode === 'pick') {
-    const byeIdx = +document.getElementById('bye-select').value;
-    const idx = players.findIndex(p => p.id === byeIdx);
-    if (idx > 0) { const t = players[0]; players[0] = players[idx]; players[idx] = t; }
+    const byeIdxRaw = document.getElementById('bye-select').value;
+    const byeIdx    = byeIdxRaw !== '' ? +byeIdxRaw : -1;
+    const idx = byeIdx >= 0 ? players.findIndex(p => p.id === byeIdx) : -1;
+    if (idx >= 0) {
+      // 指定選手を players[0] へ（ブラケット最上位のシードスロット）
+      if (idx !== 0) { const t = players[0]; players[0] = players[idx]; players[idx] = t; }
+    }
+    // idx===-1: 選択なし/不正値 → シャッフル後の先頭がシード
   }
   // ランダムモードはシャッフル後の先頭がそのまま不戦勝
 
@@ -866,30 +889,37 @@ function preInitLosers() {
   initBracket(tbds, 'losers');
 }
 
-// TBDスロットを既知の敗者で埋める
-function fillLosersSlots(knownLosers) {
-  if (!losers) return;
-  let li = 0;
-  for (const m of losers.rounds[0]) {
-    // 既に実プレイヤーが入っているスロットは li をカウントアップしてスキップ
-    if (m.p1 && !m.p1.isTBD) { li++; }
-    else if (m.p1?.isTBD && li < knownLosers.length) { m.p1 = knownLosers[li++]; }
-    if (m.p2 && !m.p2.isTBD) { li++; }
-    else if (m.p2?.isTBD && li < knownLosers.length) { m.p2 = knownLosers[li++]; }
-  }
+// 既知の敗者＋残りTBDでスロット配列を作りブラケットを再構築（共通処理）
+function rebuildLosersFromKnown(knownLosers) {
+  const total = countRealMatchesR0();
+  if (total < 2) { losers = null; updateLosersTab(); return; }
+  const slots = Array.from({ length: total }, (_, i) =>
+    i < knownLosers.length ? knownLosers[i] : { ...TBD });
+  initBracket(slots, 'losers');
 }
 
-// 敗者が出るたびに随時反映
+// 敗者が出るたびに随時反映（試合未消化の間はゼロから再構築）
 function tryBuildLosers() {
   if (!winners) return;
   const knownLosers = collectKnownLosers();
   if (knownLosers.length === 0) return;
 
-  if (!losers) {
-    preInitLosers();
-    if (!losers) return;
+  // 敗者ブラケットにまだ試合結果がない → ゼロから再構築（BYEズレバグを回避）
+  const hasPlayed = losers?.rounds?.some(rd =>
+    rd.some(m => m.winner && !m.winner.isBye && !m.winner.isTBD));
+  if (!hasPlayed) {
+    rebuildLosersFromKnown(knownLosers);
+  } else {
+    // 既プレイ済みがある場合: TBDスロットだけ差し替え（BYEはスキップ）
+    let li = 0;
+    for (const m of losers.rounds[0]) {
+      if (m.p1?.isTBD && li < knownLosers.length) { m.p1 = knownLosers[li++]; }
+      else if (m.p1 && !m.p1.isTBD && !m.p1.isBye) { li++; }
+      if (m.p2?.isBye) continue; // BYEスロットはliに影響しない
+      if (m.p2?.isTBD && li < knownLosers.length) { m.p2 = knownLosers[li++]; }
+      else if (m.p2 && !m.p2.isTBD && !m.p2.isBye) { li++; }
+    }
   }
-  fillLosersSlots(knownLosers);
   updateLosersTab();
 }
 
@@ -897,15 +927,7 @@ function tryBuildLosers() {
 function rebuildLosersAfterUndo() {
   const knownLosers = collectKnownLosers();
   losers = null;
-  if (knownLosers.length === 0) { updateLosersTab(); return; }
-  preInitLosers();
-  if (!losers) return;
-  let li = 0;
-  for (const m of losers.rounds[0]) {
-    if (m.p1?.isTBD && li < knownLosers.length) m.p1 = knownLosers[li++];
-    if (m.p2?.isTBD && li < knownLosers.length) m.p2 = knownLosers[li++];
-  }
-  updateLosersTab();
+  rebuildLosersFromKnown(knownLosers);
 }
 
 // 試合結果の取り消し（カスケード）

@@ -1,4 +1,4 @@
-const CACHE = 'tournament-v1';
+const CACHE = 'tournament-v2';
 const FILES = [
   './index.html',
   './manifest.json',
