@@ -380,6 +380,12 @@
     .p-name.tbd { color: #3a3a52; font-style: italic; font-size: 0.78rem; }
 
     /* 取り消しボタン：2スロット中央に配置、円形デザイン */
+    /* ビリ決定戦ヒント */
+    .biri-hint {
+      position: absolute; top: -18px; left: 50%; transform: translateX(-50%);
+      font-size: 0.6rem; font-weight: 700; letter-spacing: .05em;
+      color: rgba(255,123,114,.55); white-space: nowrap; pointer-events: none;
+    }
     .btn-undo {
       position: absolute; top: 50%; right: 6px;
       transform: translateY(-50%);
@@ -519,7 +525,7 @@
     <span class="nav-brand" id="nav-brand">🏆 <b>TOURNAMENT</b></span>
     <div class="tab-group">
       <button class="tab-btn active-w" id="tab-w" onclick="showTab('w')">🏆 トーナメント</button>
-      <button class="tab-btn" id="tab-l" onclick="showTab('l')">💔 敗者トーナメント <span class="tab-badge" id="tab-badge">準備中</span></button>
+      <button class="tab-btn" id="tab-l" onclick="showTab('l')">🥴 ビリ決定戦 <span class="tab-badge" id="tab-badge">準備中</span></button>
       <button class="tab-btn" id="tab-h" onclick="showTab('h')">📋 履歴</button>
     </div>
   </div>
@@ -534,7 +540,7 @@
       <div id="bracket-l"><canvas id="canvas-l"></canvas></div>
       <div class="losers-pending" id="losers-pending">
         <span class="losers-pending-icon">⏳</span>
-        <p>トーナメントで敗者が決められ次第<br>トーナメントが作成されます</p>
+        <p>トーナメントで敗者が出次第<br>ビリ決定戦が始まります</p>
       </div>
     </div>
     <!-- 履歴 -->
@@ -853,10 +859,13 @@ function storeScore(bracketId, ri, mi, slot, val) {
   const m = rounds[ri][mi];
   if (slot === 1) m.s1 = val; else m.s2 = val;
 
-  // 両方入力済 & 異なる → 自動勝者選択
+  // 両方入力済 & 異なる → 自動選択
+  // ビリ決定戦: スコアが低い方（弱い方）が次へ進む / 通常: 高い方が勝ち
   const s1 = parseFloat(m.s1), s2 = parseFloat(m.s2);
   if (!isNaN(s1) && !isNaN(s2) && s1 !== s2 && !m.winner) {
-    const w = s1 > s2 ? m.p1 : m.p2;
+    const w = bracketId === 'l'
+      ? (s1 < s2 ? m.p1 : m.p2)   // ビリ決定戦: 低スコア（弱い方）が進む
+      : (s1 > s2 ? m.p1 : m.p2);  // 通常: 高スコアが勝ち
     const bothReal = m.p1 && !m.p1.isBye && m.p2 && !m.p2.isBye;
     if (w && !w.isBye && bothReal) {
       pick(rounds, ri, mi, w, bracketId);
@@ -1003,7 +1012,7 @@ function checkWinner(bracketId) {
   const last = rounds[rounds.length - 1][0];
   if (!last.winner || last.winner.isBye) return;
 
-  const eyebrow = bracketId === 'w' ? '🏆 Champion' : '🥉 3rd Place Champion';
+  const eyebrow = bracketId === 'w' ? '🏆 Champion' : '🥴 最下位（ビリ）';
   document.getElementById('w-eyebrow').textContent = eyebrow;
 
   const wName = document.getElementById('w-name');
@@ -1217,6 +1226,13 @@ function renderBracket(bracketId, overrideContId, overrideCvId) {
         const card = document.createElement('div');
         card.className = `match-card${isDoubles ? ' doubles-card' : ''} ${activeClass}`;
         card.style.cssText = `left:${x}px;top:${topY}px;`;
+        // ビリ決定戦: 未確定の試合にヒントラベルを表示
+        if (isLoss && !m.winner && bothReal) {
+          const hint = document.createElement('div');
+          hint.className = 'biri-hint';
+          hint.textContent = '負けた人をタップ';
+          card.appendChild(hint);
+        }
         card.appendChild(makeSlot(m.p1, m, ri, mi, matchH, bracketId, isLoss));
         card.appendChild(makeSlot(m.p2, m, ri, mi, matchH, bracketId, isLoss));
         // 完了試合に取り消しボタン
@@ -1281,11 +1297,13 @@ function makeSlot(player, m, ri, mi, matchH, bracketId, isLoss) {
   else if (isLoser)   el.classList.add('loser');
   else if (both) {
     el.classList.add('clickable');
-    el.title = `${player.name} を勝者に選択`;
+    el.title = isLoss
+      ? `${player.name} が負けた（ビリ候補として次へ）`
+      : `${player.name} を勝者に選択`;
     el.addEventListener('click', () => {
       const rds = bracketId === 'w' ? winners.rounds : losers.rounds;
       const mm  = rds[ri][mi];
-      // 両方のスコアが入力されていない場合は勝者確定せず、入力を促す
+      // 両方のスコアが入力されていない場合は確定せず、入力を促す
       if (mm.s1 === '' || mm.s2 === '') {
         const card = el.closest('.match-card');
         if (card) {
@@ -1303,7 +1321,10 @@ function makeSlot(player, m, ri, mi, matchH, bracketId, isLoss) {
     });
   }
 
-  const crown = isWinner ? '<span class="p-crown">★</span>' : '';
+  // ビリ決定戦: 「進んだ」選手（弱い方）は💀、通常は★
+  const crown = isWinner
+    ? `<span class="p-crown">${isLoss ? '💀' : '★'}</span>`
+    : '';
 
   if (isDoubles && player.isTeam) {
     // ダブルス: 2行表示
