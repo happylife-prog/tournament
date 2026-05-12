@@ -1190,6 +1190,19 @@ function updateLosersTab() {
   if (!winners) { badge.textContent = '準備中'; badge.style.background = ''; badge.style.color = ''; return; }
   const known    = collectAllLosers().length;
   const expected = countTotalExpectedLosers();
+  // 対象者0人（4人以下など）→ 敗者トーナメント不要
+  if (expected === 0) {
+    badge.textContent = '対象なし';
+    badge.style.background = 'rgba(100,100,100,.2)';
+    badge.style.color = 'rgba(160,160,160,.6)';
+    // ペンディング表示を「対象なし」メッセージに更新
+    const pending = document.getElementById('losers-pending');
+    if (pending) {
+      pending.querySelector('.losers-pending-icon').textContent = 'ℹ️';
+      pending.querySelector('p').innerHTML = '参加者数が少ないため<br>敗者トーナメントはありません';
+    }
+    return;
+  }
   if (known === 0) {
     badge.textContent = '準備中';
     badge.style.background = ''; badge.style.color = '';
