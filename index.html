@@ -571,7 +571,6 @@
       <div id="third-place-section" style="display:none;">
         <div class="tp-section-header">
           <span class="tp-title">🥉 3位決定戦</span>
-          <span class="tp-subtitle">準決勝敗者同士で3位を争います</span>
         </div>
         <div id="third-place-card-wrap"></div>
       </div>
@@ -803,8 +802,12 @@ function startTournament() {
   losers = null;
   thirdPlace = null;
   matchHistory = [];
-  preInitLosers(); // 敗者ブラケットをTBDで先行構築
-  updateLosersTab();
+  // ダブルスは敗者トーナメント・3位決定戦なし
+  document.getElementById('tab-l').style.display = isDoubles ? 'none' : '';
+  if (!isDoubles) {
+    preInitLosers(); // 敗者ブラケットをTBDで先行構築
+    updateLosersTab();
+  }
 
   const brand = document.getElementById('nav-brand');
   brand.innerHTML = `🏆 <b${isDoubles?' class="d"':''}>TOURNAMENT</b>`;
@@ -819,6 +822,7 @@ function startTournament() {
 function backToSetup() {
   document.getElementById('tournament').style.display = 'none';
   document.getElementById('setup').style.display = 'flex';
+  document.getElementById('tab-l').style.display = '';
   currentPairs = [];
   matchHistory = [];
   thirdPlace = null;
@@ -971,7 +975,7 @@ function rebuildLosersFromKnown(knownLosers) {
 
 // 敗者が出るたびに随時反映（全ラウンド対応）
 function tryBuildLosers() {
-  if (!winners) return;
+  if (isDoubles || !winners) return;
   const knownLosers = collectAllLosers(); // ← 全ラウンドから収集
   if (knownLosers.length === 0) return;
 
@@ -1024,6 +1028,7 @@ function collectSemiLosers() {
 
 // 3位決定戦データを更新
 function updateThirdPlace() {
+  if (isDoubles) { thirdPlace = null; render3rdPlace(); return; }
   const R = winners?.rounds?.length ?? 0;
   if (R < 2) { thirdPlace = null; render3rdPlace(); return; }
   const semiLosers = collectSemiLosers();
@@ -1095,11 +1100,7 @@ function render3rdPlace() {
   const card = document.createElement('div');
   card.className = 'match-card tp-card' + (isDone ? ' done' : bothReal ? ' active-tp' : '');
 
-  if (!isDone && bothReal) {
-    const hint = document.createElement('div');
-    hint.className = 'tp-hint'; hint.textContent = '3位を勝ち取った人をタップ';
-    card.appendChild(hint);
-  }
+  // hint removed
   card.appendChild(makeThirdPlaceSlot(m.p1, m, 1));
   card.appendChild(makeThirdPlaceSlot(m.p2, m, 2));
 
@@ -1442,12 +1443,7 @@ function renderBracket(bracketId, overrideContId, overrideCvId) {
         card.className = `match-card${isDoubles ? ' doubles-card' : ''} ${activeClass}`;
         card.style.cssText = `left:${x}px;top:${topY}px;`;
         // ビリ決定戦: 未確定の試合にヒントラベルを表示
-        if (isLoss && !m.winner && bothReal) {
-          const hint = document.createElement('div');
-          hint.className = 'biri-hint';
-          hint.textContent = '勝った人をタップ';
-          card.appendChild(hint);
-        }
+        // hint removed
         card.appendChild(makeSlot(m.p1, m, ri, mi, matchH, bracketId, isLoss));
         card.appendChild(makeSlot(m.p2, m, ri, mi, matchH, bracketId, isLoss));
         // 完了試合に取り消しボタン
