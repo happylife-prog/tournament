@@ -731,14 +731,21 @@ function startTournament() {
 
   shuffle(players);
 
-  // 奇数 & 指定モード: 選択した選手をシードスロットに配置
+  // 奇数 & 指定モード: 選択した選手を「最後のシードスロット」に配置
+  // → ブラケット上で実試合の直上に来て、R1で実試合の勝者と当たれるポジション
   if (!isDoubles && players.length % 2 !== 0 && byeMode === 'pick') {
     const byeIdxRaw = document.getElementById('bye-select').value;
     const byeIdx    = byeIdxRaw !== '' ? +byeIdxRaw : -1;
     const idx = byeIdx >= 0 ? players.findIndex(p => p.id === byeIdx) : -1;
     if (idx >= 0) {
-      // 指定選手を players[0] へ（ブラケット最上位のシードスロット）
-      if (idx !== 0) { const t = players[0]; players[0] = players[idx]; players[idx] = t; }
+      // numByes を計算
+      let sz = 1; while (sz < players.length) sz <<= 1;
+      const numByes = sz - players.length;
+      // 最後のシード枠（players[numByes-1]）に指定選手を配置
+      const target = numByes - 1;
+      if (idx !== target) {
+        const t = players[target]; players[target] = players[idx]; players[idx] = t;
+      }
     }
     // idx===-1: 選択なし/不正値 → シャッフル後の先頭がシード
   }
