@@ -380,12 +380,45 @@
     .p-name.tbd { color: #3a3a52; font-style: italic; font-size: 0.78rem; }
 
     /* 取り消しボタン：2スロット中央に配置、円形デザイン */
-    /* ビリ決定戦ヒント */
+    /* ビリ決定戦・3位決定戦ヒントラベル（カード内トップ） */
     .biri-hint {
-      position: absolute; top: -18px; left: 50%; transform: translateX(-50%);
-      font-size: 0.6rem; font-weight: 700; letter-spacing: .05em;
-      color: rgba(255,123,114,.55); white-space: nowrap; pointer-events: none;
+      display: block; width: 100%; text-align: center; padding: 3px 0;
+      font-size: 0.58rem; font-weight: 700; letter-spacing: .06em;
+      color: rgba(255,123,114,.6); background: rgba(255,123,114,.06);
+      pointer-events: none; border-bottom: 1px solid rgba(255,123,114,.1);
     }
+    .tp-hint {
+      display: block; width: 100%; text-align: center; padding: 3px 0;
+      font-size: 0.58rem; font-weight: 700; letter-spacing: .06em;
+      color: rgba(160,192,255,.6); background: rgba(160,192,255,.06);
+      pointer-events: none; border-bottom: 1px solid rgba(160,192,255,.1);
+    }
+    /* 3位決定戦セクション */
+    #third-place-section {
+      padding: 20px 24px 16px;
+      border-top: 1px solid var(--border-dim);
+    }
+    .tp-section-header { display: flex; align-items: baseline; gap: 10px; margin-bottom: 14px; }
+    .tp-title { font-size: 0.82rem; font-weight: 800; color: #a0c0ff; letter-spacing: .06em; }
+    .tp-subtitle { font-size: 0.7rem; color: var(--muted); }
+    .match-card.tp-card {
+      position: relative; display: inline-flex; flex-direction: column;
+      animation: none;
+    }
+    .match-card.tp-card.active-tp {
+      border-color: rgba(160,192,255,.6);
+      box-shadow: 0 0 0 1px rgba(160,192,255,.15), 0 0 18px rgba(160,192,255,.1);
+      animation: pulseTP 2s ease-in-out infinite;
+    }
+    @keyframes pulseTP {
+      0%,100% { box-shadow: 0 0 0 1px rgba(160,192,255,.15), 0 0 18px rgba(160,192,255,.1); }
+      50%      { box-shadow: 0 0 0 1px rgba(160,192,255,.3),  0 0 28px rgba(160,192,255,.18); }
+    }
+    .p-slot.tp-slot.clickable:hover, .p-slot.tp-slot.clickable:active { background: rgba(160,192,255,.08); }
+    .p-slot.tp-slot.clickable:hover .p-name, .p-slot.tp-slot.clickable:active .p-name { color: #a0c0ff; }
+    .p-slot.winner.tp-slot { background: linear-gradient(90deg,rgba(160,192,255,.13),transparent); }
+    .p-slot.winner.tp-slot .p-name { color: #a0c0ff; font-weight: 700; }
+    .p-slot.winner.tp-slot .score-badge { color: #a0c0ff; }
     .btn-undo {
       position: absolute; top: 50%; right: 6px;
       transform: translateY(-50%);
@@ -534,6 +567,14 @@
     <!-- 勝者ブラケット -->
     <div class="bracket-area visible" id="area-w">
       <div id="bracket-w"><canvas id="canvas-w"></canvas></div>
+      <!-- 3位決定戦 -->
+      <div id="third-place-section" style="display:none;">
+        <div class="tp-section-header">
+          <span class="tp-title">🥉 3位決定戦</span>
+          <span class="tp-subtitle">準決勝敗者同士で3位を争います</span>
+        </div>
+        <div id="third-place-card-wrap"></div>
+      </div>
     </div>
     <!-- 敗者ブラケット -->
     <div class="bracket-area" id="area-l">
@@ -590,6 +631,7 @@ let isDoubles    = false;
 let currentPairs = [];
 let winners      = null; // { rounds }
 let losers       = null; // { rounds } or null
+let thirdPlace   = null; // { p1, p2, winner, s1, s2 } 3位決定戦
 let activeTab    = 'w';
 let matchHistory = []; // { time, bracketId, ri, mi, winner, loser, s1, s2 }
 
@@ -759,6 +801,7 @@ function startTournament() {
 
   initBracket(players, 'winners');
   losers = null;
+  thirdPlace = null;
   matchHistory = [];
   preInitLosers(); // 敗者ブラケットをTBDで先行構築
   updateLosersTab();
@@ -778,6 +821,7 @@ function backToSetup() {
   document.getElementById('setup').style.display = 'flex';
   currentPairs = [];
   matchHistory = [];
+  thirdPlace = null;
   document.getElementById('pairs-preview').style.display = 'none';
 }
 
@@ -847,7 +891,7 @@ function pick(rounds, ri, mi, player, bracketId) {
   });
   adv(rounds, ri, mi, player);
   autoByes(rounds);
-  if (bracketId === 'w') tryBuildLosers();
+  if (bracketId === 'w') { tryBuildLosers(); updateThirdPlace(); }
   renderAll();
   renderHistory();
   checkWinner(bracketId);
@@ -878,29 +922,36 @@ function storeScore(bracketId, ri, mi, slot, val) {
 
 // ── 敗者ブラケット ────────────────────────────────────────
 
-// 勝者ブラケットに参加する実プレイヤー数 - 1 = 敗者ブラケットの合計人数
+// ビリ決定戦の参加者数:
+// 全参加者 - 優勝者(1) - 準優勝者(1) - 3位決定戦の2人 = n - 4
+// ※準決勝・決勝の4人はビリに入らない
 function countTotalExpectedLosers() {
   if (!winners) return 0;
+  const R = winners.rounds.length;
   let n = 0;
   winners.rounds[0].forEach(m => {
     if (m.p1 && !m.p1.isBye) n++;
     if (m.p2 && !m.p2.isBye) n++;
   });
-  return Math.max(0, n - 1); // 優勝者1名を除く全員が敗者ブラケットへ
+  // ラウンド数が2以上なら準決勝・決勝の4人を除外
+  return R >= 2 ? Math.max(0, n - 4) : Math.max(0, n - 1);
 }
 
-// 勝者ブラケットの【全ラウンド】から敗者を収集
+// ビリ決定戦用の敗者収集（準決勝・決勝の敗者は除外）
 function collectAllLosers() {
   if (!winners) return [];
+  const R = winners.rounds.length;
   const arr = [];
-  for (const rd of winners.rounds) {
-    for (const m of rd) {
+  winners.rounds.forEach((rd, ri) => {
+    // 準決勝(R-2)と決勝(R-1)の敗者はビリに入れない（3位決定戦・2位扱い）
+    if (R >= 2 && ri >= R - 2) return;
+    rd.forEach(m => {
       if (m.winner && !m.winner.isBye && !m.winner.isTBD) {
         const loser = m.p1 === m.winner ? m.p2 : m.p1;
         if (loser && !loser.isBye && !loser.isTBD) arr.push(loser);
       }
-    }
-  }
+    });
+  });
   return arr;
 }
 
@@ -956,6 +1007,167 @@ function rebuildLosersAfterUndo() {
   rebuildLosersFromKnown(knownLosers);
 }
 
+// ── 3位決定戦 ─────────────────────────────────────────────
+
+// 準決勝の敗者を収集
+function collectSemiLosers() {
+  if (!winners) return [];
+  const R = winners.rounds.length;
+  if (R < 2) return [];
+  const arr = [];
+  winners.rounds[R - 2].forEach(m => {
+    if (m.winner && !m.winner.isBye && !m.winner.isTBD) {
+      const loser = m.p1 === m.winner ? m.p2 : m.p1;
+      if (loser && !loser.isBye && !loser.isTBD) arr.push(loser);
+    }
+  });
+  return arr;
+}
+
+// 3位決定戦データを更新
+function updateThirdPlace() {
+  const R = winners?.rounds?.length ?? 0;
+  if (R < 2) { thirdPlace = null; render3rdPlace(); return; }
+  const semiLosers = collectSemiLosers();
+  if (semiLosers.length < 2) {
+    // 準決勝未完了 or 取り消し → 結果をリセット（試合自体は維持）
+    if (thirdPlace && thirdPlace.winner) {
+      thirdPlace.winner = null; thirdPlace.s1 = ''; thirdPlace.s2 = '';
+    }
+    if (thirdPlace) { thirdPlace.p1 = semiLosers[0] || null; thirdPlace.p2 = semiLosers[1] || null; }
+    render3rdPlace(); return;
+  }
+  if (!thirdPlace) {
+    thirdPlace = { p1: semiLosers[0], p2: semiLosers[1], winner: null, s1: '', s2: '' };
+  } else if (!thirdPlace.winner) {
+    thirdPlace.p1 = semiLosers[0]; thirdPlace.p2 = semiLosers[1];
+  }
+  render3rdPlace();
+}
+
+// 3位決定戦の勝者を確定
+function pick3rd(player) {
+  if (!thirdPlace || thirdPlace.winner) return;
+  const loser = thirdPlace.p1 === player ? thirdPlace.p2 : thirdPlace.p1;
+  thirdPlace.winner = player;
+  matchHistory.push({
+    id: Date.now() + '_3rd',
+    time: new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+    bracketId: '3rd', ri: 0, mi: 0,
+    winner: player.name, loser: loser?.name ?? '—',
+    s1: thirdPlace.s1, s2: thirdPlace.s2
+  });
+  render3rdPlace();
+  renderHistory();
+}
+
+// 3位決定戦の取り消し
+function undo3rd() {
+  if (!thirdPlace || !thirdPlace.winner) return;
+  const idx = matchHistory.map((_,i)=>i).reverse()
+    .find(i => matchHistory[i].bracketId === '3rd');
+  if (idx !== undefined) matchHistory.splice(idx, 1);
+  thirdPlace.winner = null; thirdPlace.s1 = ''; thirdPlace.s2 = '';
+  render3rdPlace(); renderHistory();
+}
+
+// 3位決定戦スコア保存
+function storeScore3rd(slot, val) {
+  if (!thirdPlace) return;
+  if (slot === 1) thirdPlace.s1 = val; else thirdPlace.s2 = val;
+  const s1 = parseFloat(thirdPlace.s1), s2 = parseFloat(thirdPlace.s2);
+  if (!isNaN(s1) && !isNaN(s2) && s1 !== s2 && !thirdPlace.winner) {
+    pick3rd(s1 > s2 ? thirdPlace.p1 : thirdPlace.p2);
+  }
+}
+
+// 3位決定戦の描画
+function render3rdPlace() {
+  const section = document.getElementById('third-place-section');
+  const wrap    = document.getElementById('third-place-card-wrap');
+  if (!section || !wrap) return;
+  const m = thirdPlace;
+  if (!m || (!m.p1 && !m.p2)) { section.style.display = 'none'; return; }
+  section.style.display = '';
+  wrap.innerHTML = '';
+
+  const isDone  = !!m.winner;
+  const bothReal = m.p1 && !m.p1.isBye && m.p2 && !m.p2.isBye;
+  const card = document.createElement('div');
+  card.className = 'match-card tp-card' + (isDone ? ' done' : bothReal ? ' active-tp' : '');
+
+  if (!isDone && bothReal) {
+    const hint = document.createElement('div');
+    hint.className = 'tp-hint'; hint.textContent = '3位を勝ち取った人をタップ';
+    card.appendChild(hint);
+  }
+  card.appendChild(makeThirdPlaceSlot(m.p1, m, 1));
+  card.appendChild(makeThirdPlaceSlot(m.p2, m, 2));
+
+  if (isDone) {
+    const ub = document.createElement('button');
+    ub.className = 'btn-undo'; ub.title = '結果を取り消す'; ub.textContent = '↺';
+    ub.addEventListener('click', e => { e.stopPropagation(); undo3rd(); });
+    card.appendChild(ub);
+  }
+  wrap.appendChild(card);
+}
+
+function makeThirdPlaceSlot(player, m, slotNum) {
+  const el = document.createElement('div');
+  const isWinner = m.winner === player;
+  const isLoser  = m.winner && m.winner !== player;
+  const both = m.p1 && m.p2;
+  const real = player && !player.isBye && !player.isTBD;
+
+  el.className = 'p-slot tp-slot';
+  el.style.minHeight = '38px';
+
+  if (!real) {
+    el.classList.add('empty');
+    el.innerHTML = '<span class="p-name">—</span>';
+    return el;
+  }
+  if (isWinner) el.classList.add('winner');
+  else if (isLoser) el.classList.add('loser');
+  else if (both) {
+    el.classList.add('clickable');
+    el.title = `${player.name} が3位（勝者）`;
+    el.addEventListener('click', () => {
+      if (!thirdPlace.s1 && !thirdPlace.s2) {
+        const card = el.closest('.match-card');
+        if (card) card.querySelectorAll('.score-input').forEach(inp => {
+          if (!inp.value) { inp.focus(); inp.classList.add('score-required'); setTimeout(()=>inp.classList.remove('score-required'),1200); }
+        });
+        return;
+      }
+      pick3rd(player);
+    });
+  }
+
+  const crown = isWinner ? '<span class="p-crown">★</span>' : '';
+  el.innerHTML = `<span class="p-name">${crown}${h(player.name)}</span>`;
+
+  // スコア
+  if (isWinner || isLoser) {
+    const val = slotNum === 1 ? m.s1 : m.s2;
+    const sb = document.createElement('span');
+    sb.className = 'score-badge'; sb.textContent = val !== '' ? val : '–';
+    el.appendChild(sb);
+  } else {
+    const val = slotNum === 1 ? m.s1 : m.s2;
+    const inp = document.createElement('input');
+    inp.type = 'number'; inp.className = 'score-input';
+    inp.min = 0; inp.max = 99; inp.value = val !== '' ? val : ''; inp.placeholder = '-';
+    const stop = e => e.stopPropagation();
+    ['mousedown','click','touchstart','touchend'].forEach(ev => inp.addEventListener(ev, stop, { passive: ev==='touchstart' }));
+    inp.addEventListener('input', e => { e.stopPropagation(); if(slotNum===1) thirdPlace.s1=e.target.value; else thirdPlace.s2=e.target.value; });
+    inp.addEventListener('blur',  e => { e.stopPropagation(); storeScore3rd(slotNum, e.target.value); });
+    el.appendChild(inp);
+  }
+  return el;
+}
+
 // 試合結果の取り消し（カスケード）
 function undoPick(rounds, ri, mi, bracketId) {
   const m = rounds[ri][mi];
@@ -979,8 +1191,8 @@ function undoPick(rounds, ri, mi, bracketId) {
   m.s1 = '';
   m.s2 = '';
 
-  // 勝者ブラケットの取り消しなら敗者ブラケットも再構築（全ラウンド対応）
-  if (bracketId === 'w') rebuildLosersAfterUndo();
+  // 勝者ブラケットの取り消しなら敗者ブラケット・3位決定戦も再構築
+  if (bracketId === 'w') { rebuildLosersAfterUndo(); updateThirdPlace(); }
 
   renderAll();
   renderHistory();
