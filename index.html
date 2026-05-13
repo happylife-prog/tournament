@@ -206,6 +206,58 @@
       border-radius: 20px; padding: 1px 6px;
     }
 
+    /* ハンバーガーボタン（デフォルト非表示） */
+    .btn-hamburger {
+      display: none;
+      background: none; border: 1px solid var(--border-dim);
+      border-radius: 8px; color: var(--muted);
+      font-size: 1.2rem; line-height: 1;
+      padding: 6px 10px; cursor: pointer;
+      touch-action: manipulation; flex-shrink: 0;
+      transition: background .15s;
+    }
+    .btn-hamburger:active { background: rgba(255,255,255,.08); }
+
+    /* ハンバーガードロップダウン */
+    .hamburger-menu {
+      display: none; flex-direction: column; gap: 4px;
+      position: fixed; right: 10px;
+      z-index: 200; min-width: 230px;
+      background: rgba(14,14,20,.98);
+      border: 1px solid var(--border);
+      border-radius: 14px; padding: 8px;
+      box-shadow: 0 10px 40px rgba(0,0,0,.7);
+    }
+    .hamburger-menu.open { display: flex; animation: menuDrop .18s ease; }
+    @keyframes menuDrop {
+      from { opacity:0; transform:translateY(-6px) scale(.97); }
+      to   { opacity:1; transform:translateY(0) scale(1); }
+    }
+    .hmenu-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 13px 14px; border: none; border-radius: 10px;
+      background: none; color: var(--text); width: 100%;
+      font-family: inherit; font-size: 0.9rem; font-weight: 600;
+      cursor: pointer; text-align: left; touch-action: manipulation;
+      transition: background .15s;
+    }
+    .hmenu-item:active { background: rgba(255,255,255,.07); }
+    .hmenu-item.hmenu-w { background: rgba(240,165,0,.15); color: var(--gold); }
+    .hmenu-item.hmenu-l { background: rgba(255,123,114,.15); color: var(--loss); }
+    .hmenu-item.hmenu-h { background: rgba(120,120,200,.15); color: #a0a0e0; }
+    .hmenu-icon { font-size: 1.1rem; }
+    .hmenu-name { flex: 1; }
+    .hmenu-badge {
+      font-size: 0.62rem; font-weight: 700;
+      background: rgba(255,255,255,.1); border-radius: 20px;
+      padding: 2px 7px; color: var(--muted);
+    }
+    /* バックドロップ */
+    .hamburger-backdrop {
+      display: none; position: fixed; inset: 0; z-index: 199;
+    }
+    .hamburger-backdrop.open { display: block; }
+
     .bracket-wrap {
       flex: 1; min-height: 0;
       overflow: auto; padding: 40px 36px;
@@ -502,23 +554,11 @@
       .bracket-wrap { padding: 16px 10px; }
       .w-name { font-size: 1.8rem; }
       .winner-box { padding: 36px 22px 32px; }
-      /* ナビ：1行レイアウト（2行ラップなし） */
-      .nav {
-        flex-wrap: nowrap;
-        padding: 8px 10px;
-        gap: 6px;
-      }
+      /* ナビ：1行、タブ非表示・ハンバーガー表示 */
+      .nav { flex-wrap: nowrap; padding: 8px 10px; gap: 6px; }
       .btn-back { padding: 6px 8px; font-size: .72rem; }
-      /* ブランド名を非表示にしてタブのスペース確保 */
-      .nav-brand { display: none; }
-      /* タブグループが残りスペースを占有 */
-      .tab-group { flex: 1; gap: 4px; }
-      .tab-btn {
-        flex: 1; padding: 7px 4px;
-        font-size: 0.78rem; text-align: center;
-      }
-      /* スマホではテキスト非表示・アイコン+バッジのみ */
-      .tab-txt { display: none; }
+      .tab-group { display: none; }       /* タブを非表示 */
+      .btn-hamburger { display: block; }  /* ハンバーガー表示 */
     }
   </style>
 </head>
@@ -578,7 +618,23 @@
       <button class="tab-btn" id="tab-l" onclick="showTab('l')">💗<span class="tab-txt"> 敗者トーナメント</span> <span class="tab-badge" id="tab-badge">準備中</span></button>
       <button class="tab-btn" id="tab-h" onclick="showTab('h')">📋<span class="tab-txt"> 履歴</span></button>
     </div>
+    <!-- ハンバーガーボタン（スマホのみ） -->
+    <button class="btn-hamburger" id="btn-hamburger" onclick="toggleMenu()" aria-label="メニュー">☰</button>
   </div>
+  <!-- ハンバーガードロップダウン -->
+  <div class="hamburger-menu" id="hamburger-menu">
+    <button class="hmenu-item" id="hmenu-w" onclick="menuTab('w')">
+      <span class="hmenu-icon">🏆</span><span class="hmenu-name">トーナメント</span>
+    </button>
+    <button class="hmenu-item" id="hmenu-l" onclick="menuTab('l')">
+      <span class="hmenu-icon">💗</span><span class="hmenu-name">敗者トーナメント</span>
+      <span class="hmenu-badge" id="hmenu-badge">準備中</span>
+    </button>
+    <button class="hmenu-item" id="hmenu-h" onclick="menuTab('h')">
+      <span class="hmenu-icon">📋</span><span class="hmenu-name">履歴</span>
+    </button>
+  </div>
+  <div class="hamburger-backdrop" id="hamburger-backdrop" onclick="closeMenu()"></div>
 
   <div class="bracket-wrap">
     <!-- 勝者ブラケット -->
@@ -1203,15 +1259,19 @@ function undoPick(rounds, ri, mi, bracketId) {
 }
 
 function updateLosersTab() {
-  const badge = document.getElementById('tab-badge');
-  if (!winners) { badge.textContent = '準備中'; badge.style.background = ''; badge.style.color = ''; return; }
+  const badge  = document.getElementById('tab-badge');
+  const hbadge = document.getElementById('hmenu-badge');
+  function syncBadge(text, bg, color) {
+    badge.textContent  = text;
+    badge.style.background = bg;   badge.style.color = color;
+    if (hbadge) { hbadge.textContent = text; hbadge.style.background = bg; hbadge.style.color = color; }
+  }
+  if (!winners) { syncBadge('準備中', '', ''); return; }
   const known    = collectAllLosers().length;
   const expected = countTotalExpectedLosers();
   // 対象者0人（4人以下など）→ 敗者トーナメント不要
   if (expected === 0) {
-    badge.textContent = '対象なし';
-    badge.style.background = 'rgba(100,100,100,.2)';
-    badge.style.color = 'rgba(160,160,160,.6)';
+    syncBadge('対象なし', 'rgba(100,100,100,.2)', 'rgba(160,160,160,.6)');
     // ペンディング表示を「対象なし」メッセージに更新
     const pending = document.getElementById('losers-pending');
     if (pending) {
@@ -1221,16 +1281,11 @@ function updateLosersTab() {
     return;
   }
   if (known === 0) {
-    badge.textContent = '準備中';
-    badge.style.background = ''; badge.style.color = '';
+    syncBadge('準備中', '', '');
   } else if (known < expected) {
-    badge.textContent = `${known}/${expected}人`;
-    badge.style.background = 'rgba(255,123,114,.15)';
-    badge.style.color = 'rgba(255,123,114,.7)';
+    syncBadge(`${known}/${expected}人`, 'rgba(255,123,114,.15)', 'rgba(255,123,114,.7)');
   } else {
-    badge.textContent = '準備OK';
-    badge.style.background = 'rgba(255,123,114,.25)';
-    badge.style.color = 'var(--loss)';
+    syncBadge('準備OK', 'rgba(255,123,114,.25)', 'var(--loss)');
   }
 }
 
@@ -1289,6 +1344,42 @@ function showTab(tab) {
 
   if (tab === 'l' && losers) renderBracket('l');
   if (tab === 'h') renderHistory();
+
+  updateMenuActive();
+}
+
+// ── ハンバーガーメニュー ─────────────────────────────────
+function toggleMenu() {
+  const menu = document.getElementById('hamburger-menu');
+  const backdrop = document.getElementById('hamburger-backdrop');
+  if (menu.classList.contains('open')) {
+    closeMenu();
+  } else {
+    const nav = document.querySelector('.nav');
+    menu.style.top = nav.getBoundingClientRect().bottom + 'px';
+    menu.classList.add('open');
+    backdrop.classList.add('open');
+    updateMenuActive();
+  }
+}
+
+function closeMenu() {
+  document.getElementById('hamburger-menu').classList.remove('open');
+  document.getElementById('hamburger-backdrop').classList.remove('open');
+}
+
+function menuTab(tab) {
+  showTab(tab);
+  closeMenu();
+}
+
+function updateMenuActive() {
+  ['w', 'l', 'h'].forEach(t => {
+    const el = document.getElementById('hmenu-' + t);
+    if (!el) return;
+    el.classList.remove('hmenu-w', 'hmenu-l', 'hmenu-h');
+    if (t === activeTab) el.classList.add('hmenu-' + t);
+  });
 }
 
 // ── 履歴描画 ─────────────────────────────────────────────
