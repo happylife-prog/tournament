@@ -575,8 +575,8 @@
     <button class="btn btn-ghost btn-back" onclick="backToSetup()">← やり直す</button>
     <span class="nav-brand" id="nav-brand">🏆 <b>TOURNAMENT</b></span>
     <div class="tab-group">
-      <button class="tab-btn active-w" id="tab-w" onclick="showTab('w')">🏆<span class="tab-txt"> 大会</span></button>
-      <button class="tab-btn" id="tab-l" onclick="showTab('l')">💗<span class="tab-txt"> 敗者</span> <span class="tab-badge" id="tab-badge">準備中</span></button>
+      <button class="tab-btn active-w" id="tab-w" onclick="showTab('w')">🏆<span class="tab-txt"> トーナメント</span></button>
+      <button class="tab-btn" id="tab-l" onclick="showTab('l')">💗<span class="tab-txt"> 敗者トーナメント</span> <span class="tab-badge" id="tab-badge">準備中</span></button>
       <button class="tab-btn" id="tab-h" onclick="showTab('h')">📋<span class="tab-txt"> 履歴</span></button>
     </div>
   </div>
@@ -655,11 +655,11 @@ let matchHistory = []; // { time, bracketId, ri, mi, winner, loser, s1, s2 }
 // ── Layout ────────────────────────────────────────────────
 function lp(N0) {
   const mw   = isDoubles ? MATCH_WD : MATCH_W;
-  // slotH: 実際の最小コンテンツ高(padding8×2+font≈19=35px)以上を保証
-  const slotH = Math.max(isDoubles ? 36 : 38, Math.min(isDoubles ? 52 : 50, Math.floor(460/N0)));
+  // slotH: スコア入力(34px)+padding(8×2=16px)=最低50px / ダブルス2行で52px
+  const slotH = Math.max(isDoubles ? 52 : 50, Math.min(isDoubles ? 64 : 60, Math.floor(520/N0)));
   const matchH = slotH * 2 + 2;
-  // gap: カード間の余白（最低16px確保）
-  const gap    = Math.max(16, Math.min(32, Math.floor(160/N0)));
+  // gap: カード間余白（最低18px確保）
+  const gap    = Math.max(18, Math.min(40, Math.floor(220/N0)));
   return { slotH, matchH, gap, unit: matchH+gap, mw };
 }
 
