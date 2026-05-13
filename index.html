@@ -178,28 +178,29 @@
     }
     .nav {
       display: flex; align-items: center; gap: 10px;
-      padding: 12px 20px;
+      padding: 10px 16px;
       background: rgba(8,8,12,.97); border-bottom: 1px solid var(--border-dim);
       flex-shrink: 0; z-index: 30;
     }
     @supports (backdrop-filter:blur(1px)) { .nav { background: rgba(8,8,12,.85); backdrop-filter: blur(16px); } }
-    .nav-brand { font-size: 0.88rem; font-weight: 700; color: var(--muted); flex: 1; }
+    .nav-brand { font-size: 0.88rem; font-weight: 700; color: var(--muted); flex: 1; min-width: 0; }
     .nav-brand b { color: var(--gold); }
     .nav-brand b.d { color: var(--doubles); }
+    .btn-back { padding: 7px 12px; font-size: .78rem; flex-shrink: 0; white-space: nowrap; }
 
     /* タブ */
-    .tab-group { display: flex; gap: 4px; }
+    .tab-group { display: flex; gap: 4px; flex-shrink: 0; }
     .tab-btn {
       padding: 7px 14px; border: none; border-radius: 8px;
       font-family: inherit; font-size: 0.78rem; font-weight: 700;
       cursor: pointer; transition: all .18s; touch-action: manipulation;
-      background: var(--border-dim); color: var(--muted);
+      background: var(--border-dim); color: var(--muted); white-space: nowrap;
     }
     .tab-btn.active-w { background: rgba(240,165,0,.2); color: var(--gold); }
     .tab-btn.active-l { background: rgba(255,123,114,.2); color: var(--loss); }
     .tab-btn.active-h { background: rgba(120,120,200,.2); color: #a0a0e0; }
     .tab-btn .tab-badge {
-      display: inline-block; margin-left: 5px;
+      display: inline-block; margin-left: 4px;
       font-size: 0.6rem; background: rgba(255,255,255,.1);
       border-radius: 20px; padding: 1px 6px;
     }
@@ -497,11 +498,28 @@
     @media (max-width: 600px) {
       .hero-title { font-size: 2.2rem; }
       .setup-panel { padding: 24px 18px; }
-      .bracket-wrap { padding: 20px 12px; }
-      .nav { padding: 10px 14px; gap: 8px; }
+      .bracket-wrap { padding: 16px 10px; }
       .w-name { font-size: 1.8rem; }
       .winner-box { padding: 36px 22px 32px; }
-      .tab-btn { padding: 6px 10px; font-size: 0.72rem; }
+      /* ナビ：2行レイアウト */
+      .nav {
+        flex-wrap: wrap;
+        padding: 8px 12px 4px;
+        gap: 4px 8px;
+      }
+      .btn-back { padding: 6px 10px; font-size: .74rem; }
+      .nav-brand { font-size: 0.78rem; }
+      /* タブ行：幅いっぱいに展開 */
+      .tab-group {
+        width: 100%; flex-shrink: 0;
+        padding-bottom: 4px;
+      }
+      .tab-btn {
+        flex: 1; padding: 6px 4px;
+        font-size: 0.72rem; text-align: center;
+      }
+      /* スマホではテキスト非表示・アイコンのみ */
+      .tab-txt { display: none; }
     }
   </style>
 </head>
@@ -523,7 +541,7 @@
 
     <label class="lbl" id="lbl-count">参加者数</label>
     <div class="field-row">
-      <input type="number" id="num-p" class="input input-num" min="2" max="32" value="8">
+      <input type="number" id="num-p" class="input input-num" min="2" max="100" value="8">
       <button class="btn btn-ghost" onclick="updateInputs()">更新</button>
     </div>
 
@@ -554,12 +572,12 @@
 <!-- ── TOURNAMENT ─────────────────────────────── -->
 <div id="tournament">
   <div class="nav">
-    <button class="btn btn-ghost" style="padding:7px 12px;font-size:.78rem;flex-shrink:0;" onclick="backToSetup()">← やり直す</button>
+    <button class="btn btn-ghost btn-back" onclick="backToSetup()">← やり直す</button>
     <span class="nav-brand" id="nav-brand">🏆 <b>TOURNAMENT</b></span>
     <div class="tab-group">
-      <button class="tab-btn active-w" id="tab-w" onclick="showTab('w')">🏆 トーナメント</button>
-      <button class="tab-btn" id="tab-l" onclick="showTab('l')">💗 敗者トーナメント <span class="tab-badge" id="tab-badge">準備中</span></button>
-      <button class="tab-btn" id="tab-h" onclick="showTab('h')">📋 履歴</button>
+      <button class="tab-btn active-w" id="tab-w" onclick="showTab('w')">🏆<span class="tab-txt"> 大会</span></button>
+      <button class="tab-btn" id="tab-l" onclick="showTab('l')">💗<span class="tab-txt"> 敗者</span> <span class="tab-badge" id="tab-badge">準備中</span></button>
+      <button class="tab-btn" id="tab-h" onclick="showTab('h')">📋<span class="tab-txt"> 履歴</span></button>
     </div>
   </div>
 
@@ -665,7 +683,7 @@ function setMode(dbl) {
 
 // ── Setup ─────────────────────────────────────────────────
 function updateInputs() {
-  let n = Math.max(2, Math.min(32, +document.getElementById('num-p').value || 8));
+  let n = Math.max(2, Math.min(100, +document.getElementById('num-p').value || 8));
   if (isDoubles && n % 2 !== 0) n++;
   document.getElementById('num-p').value = n;
 
@@ -1357,6 +1375,7 @@ function renderAll() {
   renderBracket('w');
   if (losers) renderBracket('l'); // TBDスロットも含めて常に描画
   updateLosersTab();
+  render3rdPlace(); // 3位決定戦も常に最新状態に同期
   const pending = document.getElementById('losers-pending');
   if (pending) pending.style.display = losers ? 'none' : 'flex';
 }
@@ -1404,7 +1423,7 @@ function renderBracket(bracketId, overrideContId, overrideCvId) {
     cv.style.cssText = 'position:absolute;top:0;left:0;pointer-events:none;';
     cont.insertBefore(cv, cont.firstChild);
   }
-  const dpr = window.devicePixelRatio || 1;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2); // 大人数時のcanvas肥大化を防止
   cv.width  = totalW * dpr;
   cv.height = totalH * dpr;
   cv.style.width  = totalW + 'px';
