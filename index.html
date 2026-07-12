@@ -693,9 +693,9 @@
 <!-- ── TOURNAMENT ─────────────────────────────── -->
 <div id="tournament">
   <div class="nav">
-    <button class="btn btn-ghost btn-back" onclick="backToSetup()" title="大会をリセットして設定画面に戻ります">大会リセット</button>
+    <button class="btn btn-ghost btn-back" onclick="backToSetup()" title="表を作り直します。履歴は残ります">設定に戻る</button>
     <span class="nav-brand" id="nav-brand">🏆 <b>TOURNAMENT</b></span>
-    <span class="save-status" id="save-status" title="この端末のブラウザに大会状態を自動保存します">自動保存</span>
+    <span class="save-status" id="save-status" title="このブラウザに大会状態と履歴を自動保存します">自動保存</span>
     <div class="tab-group">
       <button class="tab-btn active-w" id="tab-w" onclick="showTab('w')">🏆<span class="tab-txt"> トーナメント</span></button>
       <button class="tab-btn" id="tab-l" onclick="showTab('l')">💗<span class="tab-txt"> 敗者トーナメント</span> <span class="tab-badge" id="tab-badge">準備中</span></button>
@@ -781,6 +781,7 @@ const MATCH_WD = 222; // doubles
 const ROUND_GAP = 58;
 const LABEL_H   = 28;
 const STORAGE_KEY = 'tournament-state-v1';
+const HISTORY_STORAGE_KEY = 'tournament-history-v1';
 
 // ── State ─────────────────────────────────────────────────
 let isDoubles    = false;
@@ -835,6 +836,7 @@ function reviveRounds(savedRounds) {
 }
 
 function saveState() {
+  saveHistory();
   if (!winners) return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
@@ -847,10 +849,27 @@ function saveState() {
       activeTab,
       matchHistory
     }));
-    updateSaveStatus('端末に保存済み', 'saved');
+    updateSaveStatus('このブラウザに保存済み', 'saved');
   } catch (err) {
     updateSaveStatus('保存失敗', 'error');
     console.warn('Tournament state could not be saved.', err);
+  }
+}
+
+function saveHistory() {
+  try {
+    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(matchHistory));
+  } catch (err) {
+    console.warn('Tournament history could not be saved.', err);
+  }
+}
+
+function loadSavedHistory() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(HISTORY_STORAGE_KEY) || '[]');
+    return Array.isArray(saved) ? saved : [];
+  } catch (_) {
+    return [];
   }
 }
 
@@ -863,19 +882,24 @@ function updateSaveStatus(text, stateClass) {
   const el = document.getElementById('save-status');
   if (!el) return;
   el.textContent = text;
-  el.title = 'この端末のブラウザに大会状態を自動保存します';
+  el.title = 'このブラウザに大会状態と履歴を自動保存します';
   el.className = 'save-status' + (stateClass ? ` ${stateClass}` : '');
 }
 
 function restoreState() {
   let saved;
+  const savedHistory = loadSavedHistory();
   try {
     saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
   } catch (_) {
     clearSavedState();
+    matchHistory = savedHistory;
     return false;
   }
-  if (!saved || !saved.winners?.rounds) return false;
+  if (!saved || !saved.winners?.rounds) {
+    matchHistory = savedHistory;
+    return false;
+  }
 
   isDoubles = !!saved.isDoubles;
   currentPairs = Array.isArray(saved.currentPairs) ? saved.currentPairs : [];
@@ -883,7 +907,7 @@ function restoreState() {
   losers = saved.losers?.rounds ? { rounds: reviveRounds(saved.losers.rounds) } : null;
   thirdPlace = reviveThirdPlace(saved.thirdPlace);
   activeTab = ['w', 'l', 'h'].includes(saved.activeTab) ? saved.activeTab : 'w';
-  matchHistory = Array.isArray(saved.matchHistory) ? saved.matchHistory : [];
+  matchHistory = Array.isArray(saved.matchHistory) ? saved.matchHistory : savedHistory;
 
   syncModeUi();
   document.getElementById('setup').style.display = 'none';
@@ -1100,7 +1124,6 @@ function startTournament() {
   initBracket(players, 'winners');
   losers = null;
   thirdPlace = null;
-  matchHistory = [];
   preInitLosers(); // 敗者ブラケットをTBDで先行構築
   updateLosersTab();
 
@@ -1122,10 +1145,10 @@ function backToSetup() {
   winners = null;
   losers = null;
   currentPairs = [];
-  matchHistory = [];
   thirdPlace = null;
   document.getElementById('pairs-preview').style.display = 'none';
   updateInputs();
+  saveHistory();
 }
 
 // ── Bracket logic ─────────────────────────────────────────
