@@ -537,6 +537,10 @@
       border-radius: 8px; font-size: 0.82rem; transition: background .12s;
     }
     .history-item:hover { background: rgba(255,255,255,.03); }
+    .history-item.canceled { opacity: .68; background: rgba(255,255,255,.025); }
+    .history-item.canceled .h-winner { color: #77778c; text-decoration: line-through; }
+    .history-item.canceled .h-score { color: #8a6a6a; background: rgba(255,120,120,.08); }
+    .history-item.canceled .h-loser { color: #555566; text-decoration: line-through; }
     .h-time   { color: var(--muted); font-size: 0.68rem; flex-shrink: 0; min-width: 40px; }
     .h-badge  { font-size: 0.7rem; flex-shrink: 0; }
     .h-winner { color: var(--gold-soft); font-weight: 700; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -689,9 +693,9 @@
 <!-- ── TOURNAMENT ─────────────────────────────── -->
 <div id="tournament">
   <div class="nav">
-    <button class="btn btn-ghost btn-back" onclick="backToSetup()">← やり直す</button>
+    <button class="btn btn-ghost btn-back" onclick="backToSetup()" title="大会をリセットして設定画面に戻ります">大会リセット</button>
     <span class="nav-brand" id="nav-brand">🏆 <b>TOURNAMENT</b></span>
-    <span class="save-status" id="save-status">未保存</span>
+    <span class="save-status" id="save-status" title="この端末のブラウザに大会状態を自動保存します">自動保存</span>
     <div class="tab-group">
       <button class="tab-btn active-w" id="tab-w" onclick="showTab('w')">🏆<span class="tab-txt"> トーナメント</span></button>
       <button class="tab-btn" id="tab-l" onclick="showTab('l')">💗<span class="tab-txt"> 敗者トーナメント</span> <span class="tab-badge" id="tab-badge">準備中</span></button>
@@ -843,7 +847,7 @@ function saveState() {
       activeTab,
       matchHistory
     }));
-    updateSaveStatus('保存済み', 'saved');
+    updateSaveStatus('端末に保存済み', 'saved');
   } catch (err) {
     updateSaveStatus('保存失敗', 'error');
     console.warn('Tournament state could not be saved.', err);
@@ -852,13 +856,14 @@ function saveState() {
 
 function clearSavedState() {
   try { localStorage.removeItem(STORAGE_KEY); } catch (_) {}
-  updateSaveStatus('未保存', '');
+  updateSaveStatus('自動保存', '');
 }
 
 function updateSaveStatus(text, stateClass) {
   const el = document.getElementById('save-status');
   if (!el) return;
   el.textContent = text;
+  el.title = 'この端末のブラウザに大会状態を自動保存します';
   el.className = 'save-status' + (stateClass ? ` ${stateClass}` : '');
 }
 
@@ -890,7 +895,7 @@ function restoreState() {
   renderAll();
   renderHistory();
   checkAllDone();
-  updateSaveStatus('復元済み', 'restored');
+  updateSaveStatus('保存データ復元', 'restored');
   return true;
 }
 
@@ -1301,7 +1306,7 @@ function tryBuildLosers() {
 function rebuildLosersAfterUndo() {
   const knownLosers = collectAllLosers();
   losers = null;
-  matchHistory = matchHistory.filter(e => e.bracketId !== 'l');
+  cancelHistoryEntries(e => e.bracketId === 'l', '勝者表の取り消しで無効');
   rebuildLosersFromKnown(knownLosers);
 }
 
@@ -1364,9 +1369,7 @@ function pick3rd(player) {
 // 3位決定戦の取り消し
 function undo3rd() {
   if (!thirdPlace || !thirdPlace.winner) return;
-  const idx = matchHistory.map((_,i)=>i).reverse()
-    .find(i => matchHistory[i].bracketId === '3rd');
-  if (idx !== undefined) matchHistory.splice(idx, 1);
+  cancelHistoryEntry('3rd', 0, 0);
   thirdPlace.winner = null; thirdPlace.s1 = ''; thirdPlace.s2 = '';
   render3rdPlace(); renderHistory();
   saveState();
@@ -1474,10 +1477,7 @@ function undoPick(rounds, ri, mi, bracketId) {
     if (mi % 2 === 0) nm.p1 = null; else nm.p2 = null;
   }
 
-  // 履歴から削除（最後の一致エントリ）
-  const idx = matchHistory.map((h,i)=>i).reverse()
-    .find(i => matchHistory[i].bracketId === bracketId && matchHistory[i].ri === ri && matchHistory[i].mi === mi);
-  if (idx !== undefined) matchHistory.splice(idx, 1);
+  cancelHistoryEntry(bracketId, ri, mi);
 
   m.winner = null;
   m.s1 = '';
@@ -1490,6 +1490,29 @@ function undoPick(rounds, ri, mi, bracketId) {
   renderAll();
   renderHistory();
   saveState();
+}
+
+function cancelHistoryEntry(bracketId, ri, mi, reason = '結果を取り消し') {
+  const idx = matchHistory.map((h,i)=>i).reverse()
+    .find(i => !matchHistory[i].canceled &&
+      matchHistory[i].bracketId === bracketId &&
+      matchHistory[i].ri === ri &&
+      matchHistory[i].mi === mi);
+  if (idx !== undefined) markHistoryCanceled(matchHistory[idx], reason);
+}
+
+function cancelHistoryEntries(predicate, reason = '結果を取り消し') {
+  matchHistory.forEach(e => {
+    if (!e.canceled && predicate(e)) markHistoryCanceled(e, reason);
+  });
+}
+
+function markHistoryCanceled(entry, reason) {
+  entry.canceled = true;
+  entry.cancelReason = reason;
+  entry.canceledAt = new Date().toLocaleTimeString('ja-JP', {
+    hour: '2-digit', minute: '2-digit', second: '2-digit'
+  });
 }
 
 function updateLosersTab() {
@@ -1619,6 +1642,7 @@ function updateMenuActive() {
 
 // ── 履歴描画 ─────────────────────────────────────────────
 function roundLabel(bracketId, ri) {
+  if (bracketId === '3rd') return '3位決定戦';
   const rds = bracketId === 'w' ? winners?.rounds : losers?.rounds;
   const R = rds?.length || 1;
   if (bracketId === 'l') return `敗者 R${ri + 1}`;
@@ -1668,13 +1692,17 @@ function renderHistory() {
     html += `<div class="history-group"><div class="history-round-lbl">${g.label}</div>`;
     g.items.forEach(e => {
       const scoreStr = (e.s1 !== '' && e.s2 !== '') ? `${e.s1} – ${e.s2}` : '–';
-      const badge = e.bracketId === 'w' ? '🏆' : '💔';
+      const isCanceled = !!e.canceled;
+      const badge = isCanceled ? '↺' : e.bracketId === 'w' ? '🏆' : e.bracketId === '3rd' ? '🥉' : '💔';
       const eid = String(e.id).replace(/[^a-z0-9_]/gi, '_');
-      html += `<div class="history-item">
+      const scoreLabel = isCanceled ? '取消' : scoreStr;
+      const winnerLabel = isCanceled ? `取消: ${h(e.winner)}` : `★ ${h(e.winner)}`;
+      const reasonTitle = isCanceled ? h(e.cancelReason || '結果を取り消し') : '';
+      html += `<div class="history-item${isCanceled ? ' canceled' : ''}" title="${reasonTitle}">
         <span class="h-time">${e.time}</span>
         <span class="h-badge">${badge}</span>
-        <span class="h-winner">★ ${h(e.winner)}</span>
-        <span class="h-score">${scoreStr}</span>
+        <span class="h-winner">${winnerLabel}</span>
+        <span class="h-score">${scoreLabel}</span>
         <span class="h-loser">vs ${h(e.loser)}</span>
         <button class="btn-hist-del" onclick="deleteHistory('${eid}')" title="削除">×</button>
       </div>`;
