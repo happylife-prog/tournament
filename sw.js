@@ -1,4 +1,4 @@
-const CACHE = 'tournament-v12';
+const CACHE = 'tournament-v14';
 const FILES = [
   './index.html',
   './manifest.json',
@@ -24,7 +24,19 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
+  const req = e.request;
+  if (req.mode === 'navigate' || new URL(req.url).pathname.endsWith('/index.html')) {
+    e.respondWith(
+      fetch(req).then(res => {
+        const copy = res.clone();
+        caches.open(CACHE).then(c => c.put('./index.html', copy));
+        return res;
+      }).catch(() => caches.match('./index.html'))
+    );
+    return;
+  }
+
   e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request))
+    caches.match(req).then(cached => cached || fetch(req))
   );
 });

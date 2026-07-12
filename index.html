@@ -77,6 +77,8 @@
       border-radius: 20px; padding: 32px 28px;
       box-shadow: 0 30px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.03) inset;
     }
+    .setup-main { display: block; }
+    .setup-controls, .setup-roster { min-width: 0; }
 
     /* モード切替 */
     .mode-toggle { display: flex; gap: 0; background: var(--bg-input); border: 1px solid var(--border); border-radius: 12px; padding: 4px; margin-bottom: 24px; }
@@ -106,6 +108,7 @@
     .btn-ghost { background: var(--border-dim); border: 1px solid var(--border); color: var(--muted); padding: 11px 16px; font-size: 0.84rem; }
     .btn-ghost:hover { background: var(--border); color: var(--text); }
     .btn-ghost:active { background: var(--border); color: var(--text); }
+    .btn-count-sync { color: #77778c; }
 
     .btn-start {
       background: linear-gradient(135deg,var(--gold),#c47d00); color: #000;
@@ -188,6 +191,22 @@
     .nav-brand b { color: var(--gold); }
     .nav-brand b.d { color: var(--doubles); }
     .btn-back { padding: 7px 12px; font-size: .78rem; flex-shrink: 0; white-space: nowrap; }
+    .save-status {
+      flex-shrink: 0; display: inline-flex; align-items: center; gap: 5px;
+      min-height: 28px; padding: 0 10px; border-radius: 999px;
+      background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
+      color: var(--muted); font-size: 0.68rem; font-weight: 700; letter-spacing: .04em;
+    }
+    .save-status::before {
+      content: ''; width: 6px; height: 6px; border-radius: 50%;
+      background: #3f3f52; box-shadow: 0 0 0 3px rgba(255,255,255,.03);
+    }
+    .save-status.saved { color: rgba(126,231,135,.86); border-color: rgba(126,231,135,.18); background: rgba(126,231,135,.06); }
+    .save-status.saved::before { background: #7ee787; box-shadow: 0 0 0 3px rgba(126,231,135,.12); }
+    .save-status.restored { color: rgba(160,192,255,.9); border-color: rgba(160,192,255,.2); background: rgba(160,192,255,.07); }
+    .save-status.restored::before { background: #a0c0ff; box-shadow: 0 0 0 3px rgba(160,192,255,.12); }
+    .save-status.error { color: #ff8888; border-color: rgba(255,120,120,.24); background: rgba(255,80,80,.08); }
+    .save-status.error::before { background: #ff8888; box-shadow: 0 0 0 3px rgba(255,80,80,.12); }
 
     /* タブ */
     .tab-group { display: flex; gap: 4px; flex-shrink: 0; }
@@ -278,23 +297,25 @@
     }
     .match-card.doubles-card { width: 220px; }
     .match-card.active-w {
-      border-color: rgba(240,165,0,.6);
-      box-shadow: 0 0 0 1px rgba(240,165,0,.15), 0 0 18px rgba(240,165,0,.1);
+      background: linear-gradient(180deg,rgba(240,165,0,.08),rgba(14,14,20,.98) 42%);
+      border-color: rgba(240,165,0,.86);
+      box-shadow: 0 0 0 2px rgba(240,165,0,.18), 0 0 26px rgba(240,165,0,.18);
       animation: pulseW 2s ease-in-out infinite;
     }
     .match-card.active-l {
-      border-color: rgba(255,123,114,.6);
-      box-shadow: 0 0 0 1px rgba(255,123,114,.15), 0 0 18px rgba(255,123,114,.1);
+      background: linear-gradient(180deg,rgba(255,123,114,.08),rgba(14,14,20,.98) 42%);
+      border-color: rgba(255,123,114,.86);
+      box-shadow: 0 0 0 2px rgba(255,123,114,.18), 0 0 26px rgba(255,123,114,.18);
       animation: pulseL 2s ease-in-out infinite;
     }
     .match-card.done { border-color: var(--border-dim); }
     @keyframes pulseW {
-      0%,100% { box-shadow: 0 0 0 1px rgba(240,165,0,.15), 0 0 18px rgba(240,165,0,.1); }
-      50%      { box-shadow: 0 0 0 1px rgba(240,165,0,.3),  0 0 28px rgba(240,165,0,.2); }
+      0%,100% { box-shadow: 0 0 0 2px rgba(240,165,0,.18), 0 0 26px rgba(240,165,0,.18); }
+      50%      { box-shadow: 0 0 0 2px rgba(240,165,0,.32), 0 0 36px rgba(240,165,0,.28); }
     }
     @keyframes pulseL {
-      0%,100% { box-shadow: 0 0 0 1px rgba(255,123,114,.15), 0 0 18px rgba(255,123,114,.1); }
-      50%      { box-shadow: 0 0 0 1px rgba(255,123,114,.3),  0 0 28px rgba(255,123,114,.2); }
+      0%,100% { box-shadow: 0 0 0 2px rgba(255,123,114,.18), 0 0 26px rgba(255,123,114,.18); }
+      50%      { box-shadow: 0 0 0 2px rgba(255,123,114,.32), 0 0 36px rgba(255,123,114,.28); }
     }
 
     /* スロット */
@@ -309,8 +330,8 @@
     .p-slot.clickable:hover, .p-slot.clickable:active { background: rgba(240,165,0,.08); }
     .p-slot.clickable:hover .p-name, .p-slot.clickable:active .p-name { color: var(--gold-soft); }
     .p-slot.winner { background: linear-gradient(90deg,rgba(240,165,0,.13),transparent); }
-    .p-slot.winner .p-name  { color: var(--gold-soft); font-weight: 700; }
-    .p-slot.loser  .p-name  { color: #2a2a35; }
+    .p-slot.winner .p-name  { color: var(--gold-soft); font-weight: 800; }
+    .p-slot.loser  .p-name  { color: #57576a; }
     .p-slot.empty  .p-name  { color: var(--subtle); }
     /* 敗者ブラケットのスロットはロス色 */
     .p-slot.clickable.loss-bracket:hover, .p-slot.clickable.loss-bracket:active { background: rgba(255,123,114,.08); }
@@ -318,20 +339,20 @@
     .p-slot.winner.loss-bracket { background: linear-gradient(90deg,rgba(255,123,114,.13),transparent); }
     .p-slot.winner.loss-bracket .p-name { color: var(--loss); }
 
-    .p-name  { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #9898a8; }
+    .p-name  { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #b8b8c8; }
     .p-crown { font-size: 0.7rem; flex-shrink: 0; opacity: .8; }
 
     /* スコア入力 */
     .score-input {
-      width: 48px; min-height: 34px; flex-shrink: 0;
-      background: rgba(255,255,255,.07); border: 1px solid var(--border);
-      border-radius: 6px; color: var(--text); font-family: inherit;
-      font-size: 0.9rem; font-weight: 700; padding: 4px 6px;
+      width: 54px; min-height: 40px; flex-shrink: 0;
+      background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.16);
+      border-radius: 8px; color: var(--text); font-family: inherit;
+      font-size: 1rem; font-weight: 800; padding: 5px 7px;
       text-align: center; -webkit-appearance: none; appearance: none;
       transition: border-color .15s; cursor: text;
       touch-action: manipulation;
     }
-    .score-input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold-glow); }
+    .score-input:focus { outline: none; border-color: var(--gold); background: rgba(240,165,0,.1); box-shadow: 0 0 0 3px var(--gold-glow); }
     .score-input.score-required { border-color: rgba(240,165,0,.9) !important; box-shadow: 0 0 0 3px rgba(240,165,0,.3) !important; animation: scoreFlash .4s ease 2; }
     @keyframes scoreFlash { 0%,100%{opacity:1} 50%{opacity:.4} }
     .score-input::-webkit-inner-spin-button,
@@ -357,15 +378,15 @@
     .p-pair-b { font-size: 0.74rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #5a5a6e; }
     .p-slot.winner .p-pair-a { color: var(--gold-soft); }
     .p-slot.winner .p-pair-b { color: rgba(240,165,0,.5); }
-    .p-slot.loser  .p-pair-a, .p-slot.loser .p-pair-b { color: #28282f; }
+    .p-slot.loser  .p-pair-a, .p-slot.loser .p-pair-b { color: #57576a; }
 
     .round-lbl {
       position: absolute; font-size: 0.62rem; font-weight: 700;
       letter-spacing: .15em; text-transform: uppercase;
       color: var(--subtle); text-align: center; transition: color .3s;
     }
-    .round-lbl.cur-w { color: rgba(240,165,0,.7); }
-    .round-lbl.cur-l { color: rgba(255,123,114,.7); }
+    .round-lbl.cur-w { color: var(--gold); text-shadow: 0 0 18px rgba(240,165,0,.32); }
+    .round-lbl.cur-l { color: var(--loss); text-shadow: 0 0 18px rgba(255,123,114,.32); }
 
     /* 敗者ブラケット 未準備 */
     .losers-pending {
@@ -543,6 +564,56 @@
       .setup-panel { max-width: 560px; }
       .bracket-wrap { padding: 28px 20px; }
     }
+    @media (min-width: 900px) and (orientation: landscape) {
+      #setup {
+        justify-content: center;
+        padding: 22px 32px;
+      }
+      .hero {
+        display: flex; align-items: center; justify-content: center; gap: 14px;
+        margin-bottom: 20px;
+      }
+      .hero-icon {
+        font-size: 2rem; margin-bottom: 0;
+        filter: drop-shadow(0 0 18px rgba(240,165,0,.45));
+      }
+      .hero-title { font-size: 2.55rem; }
+      .hero-sub { margin-top: 4px; font-size: 0.68rem; }
+      .setup-panel {
+        max-width: 1040px;
+        padding: 24px;
+      }
+      .setup-main {
+        display: grid;
+        grid-template-columns: 310px minmax(0,1fr);
+        gap: 24px;
+        align-items: stretch;
+      }
+      .setup-controls {
+        display: flex; flex-direction: column;
+        padding-right: 24px;
+        border-right: 1px solid var(--border-dim);
+      }
+      .setup-roster {
+        display: flex; flex-direction: column;
+        min-height: 0;
+      }
+      .mode-toggle { margin-bottom: 20px; }
+      .field-row { margin-bottom: 20px; }
+      .names-scroll {
+        max-height: min(430px, calc(100vh - 300px));
+        margin-bottom: 16px;
+      }
+      .btn-start {
+        margin-top: auto;
+        min-height: 54px;
+      }
+      .bracket-wrap { padding: 22px 24px; }
+      .score-input {
+        width: 56px;
+        min-height: 42px;
+      }
+    }
     @media (max-height: 600px) and (orientation: landscape) {
       #setup { justify-content: flex-start; padding-top: 28px; }
       .hero  { margin-bottom: 24px; }
@@ -557,6 +628,7 @@
       /* ナビ：1行、タブ非表示・ハンバーガー表示 */
       .nav { flex-wrap: nowrap; padding: 8px 10px; gap: 6px; }
       .btn-back { padding: 6px 8px; font-size: .72rem; }
+      .save-status { display: none; }
       .tab-group { display: none; }       /* タブを非表示 */
       .btn-hamburger { display: block; }  /* ハンバーガー表示 */
     }
@@ -573,38 +645,44 @@
   </div>
 
   <div class="setup-panel">
-    <div class="mode-toggle">
-      <button class="mode-btn active" id="btn-singles" onclick="setMode(false)">🎾 シングルス</button>
-      <button class="mode-btn" id="btn-doubles" onclick="setMode(true)">👥 ダブルス</button>
-    </div>
+    <div class="setup-main">
+      <div class="setup-controls">
+        <div class="mode-toggle">
+          <button class="mode-btn active" id="btn-singles" onclick="setMode(false)">🎾 シングルス</button>
+          <button class="mode-btn" id="btn-doubles" onclick="setMode(true)">👥 ダブルス</button>
+        </div>
 
-    <label class="lbl" id="lbl-count">参加者数</label>
-    <div class="field-row">
-      <input type="number" id="num-p" class="input input-num" min="2" max="100" value="8">
-      <button class="btn btn-ghost" onclick="updateInputs()">更新</button>
-    </div>
+        <label class="lbl" id="lbl-count">参加者数</label>
+        <div class="field-row">
+          <input type="number" id="num-p" class="input input-num" min="2" max="100" value="8" oninput="handleCountInput()" onchange="updateInputs()">
+          <button class="btn btn-ghost btn-count-sync" onclick="updateInputs()">反映</button>
+        </div>
 
-    <label class="lbl" id="lbl-names">参加者名</label>
-    <div class="names-scroll" id="names-list"></div>
-
-    <!-- 奇数時: 不戦勝選手 -->
-    <div class="bye-section" id="bye-section">
-      <p class="lbl" id="bye-lbl">🎫 シード選手（1名が第1ラウンド免除）</p>
-      <div class="bye-mode-toggle">
-        <button class="bye-mode-btn active" id="bye-random-btn" onclick="setByeMode('random')">🎲 ランダム</button>
-        <button class="bye-mode-btn"        id="bye-pick-btn"   onclick="setByeMode('pick')">👤 選手を指定</button>
+        <!-- 奇数時: 不戦勝選手 -->
+        <div class="bye-section" id="bye-section">
+          <p class="lbl" id="bye-lbl">🎫 シード選手（1名が第1ラウンド免除）</p>
+          <div class="bye-mode-toggle">
+            <button class="bye-mode-btn active" id="bye-random-btn" onclick="setByeMode('random')">🎲 ランダム</button>
+            <button class="bye-mode-btn"        id="bye-pick-btn"   onclick="setByeMode('pick')">👤 選手を指定</button>
+          </div>
+          <p class="bye-random-note" id="bye-random-note">シャッフル後にランダムでシード選手が決まります</p>
+          <select class="bye-select" id="bye-select" style="display:none;"></select>
+        </div>
       </div>
-      <p class="bye-random-note" id="bye-random-note">シャッフル後にランダムでシード選手が決まります</p>
-      <select class="bye-select" id="bye-select" style="display:none;"></select>
-    </div>
 
-    <!-- ダブルス: ランダムペア作成 -->
-    <button class="btn-randomize" id="btn-randomize" onclick="randomizePairs()">🎲 ランダムでペアを作る</button>
-    <div class="pairs-preview" id="pairs-preview">
-      <div class="pairs-preview-hdr">ペア確認 — 再度タップで再シャッフル 🔀</div>
-    </div>
+      <div class="setup-roster">
+        <label class="lbl" id="lbl-names">参加者名</label>
+        <div class="names-scroll" id="names-list"></div>
 
-    <button class="btn btn-start" id="btn-start" onclick="startTournament()">トーナメント開始 →</button>
+        <!-- ダブルス: ランダムペア作成 -->
+        <button class="btn-randomize" id="btn-randomize" onclick="randomizePairs()">🎲 ランダムでペアを作る</button>
+        <div class="pairs-preview" id="pairs-preview">
+          <div class="pairs-preview-hdr">ペア確認 — 再度タップで再シャッフル 🔀</div>
+        </div>
+
+        <button class="btn btn-start" id="btn-start" onclick="startTournament()">トーナメント開始 →</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -613,6 +691,7 @@
   <div class="nav">
     <button class="btn btn-ghost btn-back" onclick="backToSetup()">← やり直す</button>
     <span class="nav-brand" id="nav-brand">🏆 <b>TOURNAMENT</b></span>
+    <span class="save-status" id="save-status">未保存</span>
     <div class="tab-group">
       <button class="tab-btn active-w" id="tab-w" onclick="showTab('w')">🏆<span class="tab-txt"> トーナメント</span></button>
       <button class="tab-btn" id="tab-l" onclick="showTab('l')">💗<span class="tab-txt"> 敗者トーナメント</span> <span class="tab-badge" id="tab-badge">準備中</span></button>
@@ -697,6 +776,7 @@ const MATCH_W  = 200;
 const MATCH_WD = 222; // doubles
 const ROUND_GAP = 58;
 const LABEL_H   = 28;
+const STORAGE_KEY = 'tournament-state-v1';
 
 // ── State ─────────────────────────────────────────────────
 let isDoubles    = false;
@@ -706,6 +786,125 @@ let losers       = null; // { rounds } or null
 let thirdPlace   = null; // { p1, p2, winner, s1, s2 } 3位決定戦
 let activeTab    = 'w';
 let matchHistory = []; // { time, bracketId, ri, mi, winner, loser, s1, s2 }
+let countUpdateTimer = null;
+
+// ── Persistence ───────────────────────────────────────────
+function isRealPlayer(player) {
+  return !!player && !player.isBye && !player.isTBD;
+}
+
+function samePlayer(a, b) {
+  if (!a || !b) return false;
+  if (a.isBye && b.isBye) return true;
+  if (a.isTBD && b.isTBD) return true;
+  return a.id !== undefined && b.id !== undefined
+    ? a.id === b.id && a.name === b.name
+    : a.name === b.name;
+}
+
+function revivePlayer(player) {
+  if (!player) return null;
+  if (player.isBye) return BYE;
+  return { ...player };
+}
+
+function reviveWinner(winner, p1, p2) {
+  if (!winner) return null;
+  if (winner.isBye) return BYE;
+  if (samePlayer(winner, p1)) return p1;
+  if (samePlayer(winner, p2)) return p2;
+  return revivePlayer(winner);
+}
+
+function reviveRounds(savedRounds) {
+  if (!Array.isArray(savedRounds)) return [];
+  return savedRounds.map(rd => rd.map(m => {
+    const p1 = revivePlayer(m.p1);
+    const p2 = revivePlayer(m.p2);
+    return {
+      p1, p2,
+      winner: reviveWinner(m.winner, p1, p2),
+      s1: m.s1 ?? '',
+      s2: m.s2 ?? ''
+    };
+  }));
+}
+
+function saveState() {
+  if (!winners) return;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      version: 1,
+      isDoubles,
+      currentPairs,
+      winners,
+      losers,
+      thirdPlace,
+      activeTab,
+      matchHistory
+    }));
+    updateSaveStatus('保存済み', 'saved');
+  } catch (err) {
+    updateSaveStatus('保存失敗', 'error');
+    console.warn('Tournament state could not be saved.', err);
+  }
+}
+
+function clearSavedState() {
+  try { localStorage.removeItem(STORAGE_KEY); } catch (_) {}
+  updateSaveStatus('未保存', '');
+}
+
+function updateSaveStatus(text, stateClass) {
+  const el = document.getElementById('save-status');
+  if (!el) return;
+  el.textContent = text;
+  el.className = 'save-status' + (stateClass ? ` ${stateClass}` : '');
+}
+
+function restoreState() {
+  let saved;
+  try {
+    saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+  } catch (_) {
+    clearSavedState();
+    return false;
+  }
+  if (!saved || !saved.winners?.rounds) return false;
+
+  isDoubles = !!saved.isDoubles;
+  currentPairs = Array.isArray(saved.currentPairs) ? saved.currentPairs : [];
+  winners = { rounds: reviveRounds(saved.winners.rounds) };
+  losers = saved.losers?.rounds ? { rounds: reviveRounds(saved.losers.rounds) } : null;
+  thirdPlace = reviveThirdPlace(saved.thirdPlace);
+  activeTab = ['w', 'l', 'h'].includes(saved.activeTab) ? saved.activeTab : 'w';
+  matchHistory = Array.isArray(saved.matchHistory) ? saved.matchHistory : [];
+
+  syncModeUi();
+  document.getElementById('setup').style.display = 'none';
+  document.getElementById('winner-wrap').style.display = 'none';
+  document.getElementById('tournament').style.display = 'flex';
+  const brand = document.getElementById('nav-brand');
+  brand.innerHTML = `🏆 <b${isDoubles?' class="d"':''}>TOURNAMENT</b>`;
+  showTab(activeTab);
+  renderAll();
+  renderHistory();
+  checkAllDone();
+  updateSaveStatus('復元済み', 'restored');
+  return true;
+}
+
+function reviveThirdPlace(saved) {
+  if (!saved) return null;
+  const p1 = revivePlayer(saved.p1);
+  const p2 = revivePlayer(saved.p2);
+  return {
+    p1, p2,
+    winner: reviveWinner(saved.winner, p1, p2),
+    s1: saved.s1 ?? '',
+    s2: saved.s2 ?? ''
+  };
+}
 
 // ── Layout ────────────────────────────────────────────────
 function lp(N0) {
@@ -719,18 +918,22 @@ function lp(N0) {
 }
 
 // ── Mode ──────────────────────────────────────────────────
+function syncModeUi() {
+  document.getElementById('btn-singles').classList.toggle('active', !isDoubles);
+  document.getElementById('btn-doubles').classList.toggle('active',  isDoubles);
+  document.getElementById('btn-doubles').classList.toggle('d',       isDoubles);
+  document.getElementById('hero-sub').textContent = isDoubles ? 'Doubles Elimination' : 'Single Elimination';
+  document.getElementById('hero-sub').classList.toggle('is-doubles', isDoubles);
+  document.getElementById('lbl-count').textContent = isDoubles ? '参加人数（偶数）' : '参加者数';
+  document.getElementById('lbl-names').textContent = isDoubles ? '参加者名（個人）' : '参加者名';
+  document.getElementById('btn-start').classList.toggle('d', isDoubles);
+  document.getElementById('btn-start').textContent = isDoubles ? 'ダブルストーナメント開始 →' : 'トーナメント開始 →';
+  document.getElementById('btn-randomize').style.display = isDoubles ? 'block' : 'none';
+}
+
 function setMode(dbl) {
   isDoubles = dbl;
-  document.getElementById('btn-singles').classList.toggle('active', !dbl);
-  document.getElementById('btn-doubles').classList.toggle('active',  dbl);
-  document.getElementById('btn-doubles').classList.toggle('d',       dbl);
-  document.getElementById('hero-sub').textContent = dbl ? 'Doubles Elimination' : 'Single Elimination';
-  document.getElementById('hero-sub').classList.toggle('is-doubles', dbl);
-  document.getElementById('lbl-count').textContent = dbl ? '参加人数（偶数）' : '参加者数';
-  document.getElementById('lbl-names').textContent = dbl ? '参加者名（個人）' : '参加者名';
-  document.getElementById('btn-start').classList.toggle('d', dbl);
-  document.getElementById('btn-start').textContent = dbl ? 'ダブルストーナメント開始 →' : 'トーナメント開始 →';
-  document.getElementById('btn-randomize').style.display = dbl ? 'block' : 'none';
+  syncModeUi();
   document.getElementById('pairs-preview').style.display = 'none';
   currentPairs = [];
   updateInputs();
@@ -738,6 +941,7 @@ function setMode(dbl) {
 
 // ── Setup ─────────────────────────────────────────────────
 function updateInputs() {
+  clearTimeout(countUpdateTimer);
   let n = Math.max(2, Math.min(100, +document.getElementById('num-p').value || 8));
   if (isDoubles && n % 2 !== 0) n++;
   document.getElementById('num-p').value = n;
@@ -752,7 +956,7 @@ function updateInputs() {
     const ph = isDoubles ? `選手 ${i+1}` : `参加者 ${i+1}`;
     row.innerHTML = `<span class="name-idx">${i+1}</span>
       <input type="text" class="input inp-s" placeholder="${ph}" value="${h(prev[i]||'')}"
-        oninput="refreshByeSelect()">`;
+        oninput="handleNameInput()">`;
     list.appendChild(row);
   }
 
@@ -781,6 +985,23 @@ function updateInputs() {
 
   document.getElementById('pairs-preview').style.display = 'none';
   currentPairs = [];
+}
+
+function handleCountInput() {
+  clearTimeout(countUpdateTimer);
+  const raw = document.getElementById('num-p').value;
+  const n = +raw;
+  if (raw === '' || !Number.isFinite(n) || n < 2) return;
+  countUpdateTimer = setTimeout(updateInputs, 180);
+}
+
+function handleNameInput() {
+  refreshByeSelect();
+  if (!isDoubles || currentPairs.length === 0) return;
+  currentPairs = [];
+  const preview = document.getElementById('pairs-preview');
+  preview.innerHTML = '<div class="pairs-preview-hdr">名前が変更されました。もう一度ペアを作ってください 🔀</div>';
+  preview.style.display = 'flex';
 }
 
 // ── 不戦勝モード（ランダム／指定） ────────────────────────
@@ -886,15 +1107,20 @@ function startTournament() {
   document.getElementById('winner-wrap').style.display = 'none';
   document.getElementById('tournament').style.display  = 'flex';
   renderAll();
+  saveState();
 }
 
 function backToSetup() {
+  clearSavedState();
   document.getElementById('tournament').style.display = 'none';
   document.getElementById('setup').style.display = 'flex';
+  winners = null;
+  losers = null;
   currentPairs = [];
   matchHistory = [];
   thirdPlace = null;
   document.getElementById('pairs-preview').style.display = 'none';
+  updateInputs();
 }
 
 // ── Bracket logic ─────────────────────────────────────────
@@ -931,7 +1157,7 @@ function autoByes(rounds) {
       rd.forEach((m, mi) => {
         if (m.winner !== null) return;
         const b1 = m.p1 === BYE, b2 = m.p2 === BYE;
-        const r1 = m.p1 && !m.p1.isBye, r2 = m.p2 && !m.p2.isBye;
+        const r1 = isRealPlayer(m.p1), r2 = isRealPlayer(m.p2);
         if (b1 && b2)      { adv(rounds, ri, mi, BYE);   changed = true; }
         else if (b1 && r2) { adv(rounds, ri, mi, m.p2); changed = true; }
         else if (r1 && b2) { adv(rounds, ri, mi, m.p1); changed = true; }
@@ -950,7 +1176,7 @@ function adv(rounds, ri, mi, player) {
 
 function pick(rounds, ri, mi, player, bracketId) {
   const m = rounds[ri][mi];
-  if (m.winner || !player || player.isBye || player.isTBD) return;
+  if (m.winner || !isRealPlayer(player)) return;
   const loser = m.p1 === player ? m.p2 : m.p1;
   // 履歴に追加
   matchHistory.push({
@@ -967,6 +1193,7 @@ function pick(rounds, ri, mi, player, bracketId) {
   renderAll();
   renderHistory();
   checkWinner(bracketId);
+  saveState();
 }
 
 // ── スコア入力 ────────────────────────────────────────────
@@ -979,14 +1206,15 @@ function storeScore(bracketId, ri, mi, slot, val) {
   const s1 = parseFloat(m.s1), s2 = parseFloat(m.s2);
   if (!isNaN(s1) && !isNaN(s2) && s1 !== s2 && !m.winner) {
     const w = s1 > s2 ? m.p1 : m.p2;
-    const bothReal = m.p1 && !m.p1.isBye && m.p2 && !m.p2.isBye;
-    if (w && !w.isBye && bothReal) {
+    const bothReal = isRealPlayer(m.p1) && isRealPlayer(m.p2);
+    if (isRealPlayer(w) && bothReal) {
       pick(rounds, ri, mi, w, bracketId);
       return;
     }
   }
   // スコアはm.s1/s2に保持済み。入力中に再描画するとフォーカスが外れるため再描画しない。
   // 自動勝者選択(上のpick)時のみ再描画される。
+  saveState();
 }
 
 // ── 敗者ブラケット ────────────────────────────────────────
@@ -999,8 +1227,8 @@ function countTotalExpectedLosers() {
   const R = winners.rounds.length;
   let n = 0;
   winners.rounds[0].forEach(m => {
-    if (m.p1 && !m.p1.isBye) n++;
-    if (m.p2 && !m.p2.isBye) n++;
+    if (isRealPlayer(m.p1)) n++;
+    if (isRealPlayer(m.p2)) n++;
   });
   // ラウンド数が2以上なら準決勝・決勝の4人を除外
   return R >= 2 ? Math.max(0, n - 4) : Math.max(0, n - 1);
@@ -1015,9 +1243,9 @@ function collectAllLosers() {
     // 準決勝(R-2)と決勝(R-1)の敗者はビリに入れない（3位決定戦・2位扱い）
     if (R >= 2 && ri >= R - 2) return;
     rd.forEach(m => {
-      if (m.winner && !m.winner.isBye && !m.winner.isTBD) {
+      if (isRealPlayer(m.winner)) {
         const loser = m.p1 === m.winner ? m.p2 : m.p1;
-        if (loser && !loser.isBye && !loser.isTBD) arr.push(loser);
+        if (isRealPlayer(loser)) arr.push(loser);
       }
     });
   });
@@ -1049,8 +1277,7 @@ function tryBuildLosers() {
 
   // 敗者ブラケットにまだ試合結果がない → ゼロから再構築
   const hasPlayed = losers?.rounds?.some(rd =>
-    rd.some(m => m.winner && !m.winner.isBye && !m.winner.isTBD
-      && m.p1 && !m.p1.isBye && m.p2 && !m.p2.isBye));
+    rd.some(m => isRealPlayer(m.winner) && isRealPlayer(m.p1) && isRealPlayer(m.p2)));
   if (!hasPlayed) {
     rebuildLosersFromKnown(knownLosers);
   } else {
@@ -1060,11 +1287,11 @@ function tryBuildLosers() {
     for (const m of losers.rounds[0]) {
       if (m.p1?.isTBD && li < knownLosers.length) {
         Object.assign(m.p1, knownLosers[li++], { isTBD: false });
-      } else if (m.p1 && !m.p1.isTBD && !m.p1.isBye) { li++; }
+      } else if (isRealPlayer(m.p1)) { li++; }
       if (m.p2?.isBye) continue;
       if (m.p2?.isTBD && li < knownLosers.length) {
         Object.assign(m.p2, knownLosers[li++], { isTBD: false });
-      } else if (m.p2 && !m.p2.isTBD && !m.p2.isBye) { li++; }
+      } else if (isRealPlayer(m.p2)) { li++; }
     }
   }
   updateLosersTab();
@@ -1074,6 +1301,7 @@ function tryBuildLosers() {
 function rebuildLosersAfterUndo() {
   const knownLosers = collectAllLosers();
   losers = null;
+  matchHistory = matchHistory.filter(e => e.bracketId !== 'l');
   rebuildLosersFromKnown(knownLosers);
 }
 
@@ -1086,9 +1314,9 @@ function collectSemiLosers() {
   if (R < 2) return [];
   const arr = [];
   winners.rounds[R - 2].forEach(m => {
-    if (m.winner && !m.winner.isBye && !m.winner.isTBD) {
+    if (isRealPlayer(m.winner)) {
       const loser = m.p1 === m.winner ? m.p2 : m.p1;
-      if (loser && !loser.isBye && !loser.isTBD) arr.push(loser);
+      if (isRealPlayer(loser)) arr.push(loser);
     }
   });
   return arr;
@@ -1130,6 +1358,7 @@ function pick3rd(player) {
   render3rdPlace();
   renderHistory();
   checkAllDone();
+  saveState();
 }
 
 // 3位決定戦の取り消し
@@ -1140,6 +1369,7 @@ function undo3rd() {
   if (idx !== undefined) matchHistory.splice(idx, 1);
   thirdPlace.winner = null; thirdPlace.s1 = ''; thirdPlace.s2 = '';
   render3rdPlace(); renderHistory();
+  saveState();
 }
 
 // 3位決定戦スコア保存
@@ -1149,7 +1379,9 @@ function storeScore3rd(slot, val) {
   const s1 = parseFloat(thirdPlace.s1), s2 = parseFloat(thirdPlace.s2);
   if (!isNaN(s1) && !isNaN(s2) && s1 !== s2 && !thirdPlace.winner) {
     pick3rd(s1 > s2 ? thirdPlace.p1 : thirdPlace.p2);
+    return;
   }
+  saveState();
 }
 
 // 3位決定戦の描画
@@ -1163,7 +1395,7 @@ function render3rdPlace() {
   wrap.innerHTML = '';
 
   const isDone  = !!m.winner;
-  const bothReal = m.p1 && !m.p1.isBye && m.p2 && !m.p2.isBye;
+  const bothReal = isRealPlayer(m.p1) && isRealPlayer(m.p2);
   const card = document.createElement('div');
   card.className = 'match-card tp-card' + (isDone ? ' done' : bothReal ? ' active-tp' : '');
 
@@ -1185,7 +1417,7 @@ function makeThirdPlaceSlot(player, m, slotNum) {
   const isWinner = m.winner === player;
   const isLoser  = m.winner && m.winner !== player;
   const both = m.p1 && m.p2;
-  const real = player && !player.isBye && !player.isTBD;
+  const real = isRealPlayer(player);
 
   el.className = 'p-slot tp-slot';
   el.style.minHeight = '38px';
@@ -1231,7 +1463,7 @@ function makeThirdPlaceSlot(player, m, slotNum) {
 // 試合結果の取り消し（カスケード）
 function undoPick(rounds, ri, mi, bracketId) {
   const m = rounds[ri][mi];
-  if (!m.winner || m.winner.isBye || m.winner.isTBD) return;
+  if (!isRealPlayer(m.winner)) return;
   const prevWinner = m.winner;
 
   // 次ラウンドから再帰的に取り消し
@@ -1254,8 +1486,10 @@ function undoPick(rounds, ri, mi, bracketId) {
   // 勝者ブラケットの取り消しなら敗者ブラケット・3位決定戦も再構築
   if (bracketId === 'w') { rebuildLosersAfterUndo(); updateThirdPlace(); }
 
+  document.getElementById('winner-wrap').style.display = 'none';
   renderAll();
   renderHistory();
+  saveState();
 }
 
 function updateLosersTab() {
@@ -1296,12 +1530,12 @@ function checkAllDone() {
   // ウィナーズブラケット完了チェック
   if (!winners) return;
   const wLast = winners.rounds[winners.rounds.length - 1][0];
-  if (!wLast.winner || wLast.winner.isBye) return;
+  if (!isRealPlayer(wLast.winner)) return;
 
   // 敗者トーナメントが存在する場合は完了チェック
   if (losers) {
     const lLast = losers.rounds[losers.rounds.length - 1][0];
-    if (!lLast.winner || lLast.winner.isBye) return;
+    if (!isRealPlayer(lLast.winner)) return;
   }
 
   // 3位決定戦が存在する場合は完了チェック
@@ -1346,6 +1580,7 @@ function showTab(tab) {
   if (tab === 'h') renderHistory();
 
   updateMenuActive();
+  saveState();
 }
 
 // ── ハンバーガーメニュー ─────────────────────────────────
@@ -1450,14 +1685,14 @@ function renderHistory() {
 }
 
 function deleteHistory(eid) {
-  const rawId = eid.replace(/_(\d)/g, (_, d) => d);
   const idx = matchHistory.findIndex(e => String(e.id).replace(/[^a-z0-9_]/gi, '_') === eid);
-  if (idx >= 0) { matchHistory.splice(idx, 1); renderHistory(); }
+  if (idx >= 0) { matchHistory.splice(idx, 1); renderHistory(); saveState(); }
 }
 
 function clearHistory() {
   matchHistory = [];
   renderHistory();
+  saveState();
 }
 
 // ── Rendering ─────────────────────────────────────────────
@@ -1526,7 +1761,7 @@ function renderBracket(bracketId, overrideContId, overrideCvId) {
   const lineDim    = 'rgba(30,30,46,.95)';
 
   const activeRound = rounds.findIndex(rd =>
-    rd.some(m => !m.winner && m.p1 && !m.p1.isBye && m.p2 && !m.p2.isBye)
+    rd.some(m => !m.winner && isRealPlayer(m.p1) && isRealPlayer(m.p2))
   );
 
   rounds.forEach((rd, ri) => {
@@ -1545,7 +1780,7 @@ function renderBracket(bracketId, overrideContId, overrideCvId) {
 
       if (isBye) {
         const winner = m.p1 === BYE ? m.p2 : m.p1;
-        if (winner && !winner.isBye) {
+        if (isRealPlayer(winner)) {
           const el = document.createElement('div');
           el.className = 'bye-auto' + (isDoubles ? ' d' : '');
           el.style.cssText = `left:${x}px;top:${centerY-14}px;`;
@@ -1553,7 +1788,7 @@ function renderBracket(bracketId, overrideContId, overrideCvId) {
           cont.appendChild(el);
         }
       } else {
-        const bothReal = m.p1 && !m.p1.isBye && m.p2 && !m.p2.isBye;
+        const bothReal = isRealPlayer(m.p1) && isRealPlayer(m.p2);
         const activeClass = m.winner ? 'done' : bothReal ? (isLoss ? 'active-l' : 'active-w') : '';
         const card = document.createElement('div');
         card.className = `match-card${isDoubles ? ' doubles-card' : ''} ${activeClass}`;
@@ -1563,7 +1798,7 @@ function renderBracket(bracketId, overrideContId, overrideCvId) {
         card.appendChild(makeSlot(m.p1, m, ri, mi, matchH, bracketId, isLoss));
         card.appendChild(makeSlot(m.p2, m, ri, mi, matchH, bracketId, isLoss));
         // 完了試合に取り消しボタン
-        if (m.winner && !m.winner.isBye && !m.winner.isTBD) {
+        if (isRealPlayer(m.winner)) {
           const undoBtn = document.createElement('button');
           undoBtn.className = 'btn-undo';
           undoBtn.title = '試合結果を取り消す';
@@ -1583,7 +1818,7 @@ function renderBracket(bracketId, overrideContId, overrideCvId) {
         const midX = x1 + ROUND_GAP / 2;
         const ny   = cy(ri+1, mi>>1, unit, gap);
         const isAuto = m.p1 === BYE || m.p2 === BYE;
-        const lc = m.winner && !m.winner.isBye && !isAuto ? lineActive : lineDim;
+        const lc = isRealPlayer(m.winner) && !isAuto ? lineActive : lineDim;
         drawLine(ctx, x1, centerY, midX, centerY, lc);
         if (mi % 2 === 0) {
           const sibY = mi+1 < rd.length ? cy(ri, mi+1, unit, gap) : centerY;
@@ -1602,9 +1837,8 @@ function makeSlot(player, m, ri, mi, matchH, bracketId, isLoss) {
   const scoreVal = slot1 ? m.s1 : m.s2;
   const scoreSlotNum = slot1 ? 1 : 2;
 
-  const real   = player && !player.isBye && !player.isTBD;
-  const both   = m.p1 && !m.p1.isBye && !m.p1.isTBD &&
-                 m.p2 && !m.p2.isBye && !m.p2.isTBD;
+  const real   = isRealPlayer(player);
+  const both   = isRealPlayer(m.p1) && isRealPlayer(m.p2);
 
   el.className = 'p-slot' + (isLoss ? ' loss-bracket' : '');
   el.style.minHeight = slotH + 'px';
@@ -1725,7 +1959,7 @@ function h(s) {
 }
 
 // Init
-updateInputs();
+if (!restoreState()) updateInputs();
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(()=>{}));
